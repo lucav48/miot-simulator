@@ -1,0 +1,10 @@
+
+#
+#
+####### MIoT Requirements #######
+#
+#pip install -r requirements.txt
+#
+###### Requirements with Version Specifiers ######
+networkx
+neo4j-driver
