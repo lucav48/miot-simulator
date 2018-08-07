@@ -8,3 +8,4 @@
 ###### Requirements with Version Specifiers ######
 networkx
 neo4j-driver
+neo4jrestclient
