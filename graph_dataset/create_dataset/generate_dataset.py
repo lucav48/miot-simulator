@@ -4,6 +4,8 @@ import settings
 import random
 import ast
 import utilities
+import os
+import write_dataset_to_file
 
 
 def create_nodes(readFile):
@@ -46,6 +48,13 @@ def create_connections(list_nodes):
         i += 1
 
 
+def get_all_context():
+    context = []
+    for x in os.listdir(settings.CONTEXT_FOLDER):
+        context.append(x.split(settings.SUFFIX_CONTEXT_FILE)[0])
+    return context
+
+
 if __name__ == "__main__":
     # read data useful to create nodes
     readFile = ReadFile.ReadFile()
@@ -57,4 +66,9 @@ if __name__ == "__main__":
     neoManager.neo4j_create_nodes(nodes)
     # look for connections among nodes and represent it as neo4j query
     create_connections(nodes)
-    print neoManager.neo4j_nodes_query
+
+    # now I have to create transactions
+    context = get_all_context()
+    print neoManager.neo4j_create_nodes_query
+    print neoManager.neo4j_create_connections_query
+    write_dataset_to_file.write_to_file(neoManager)
