@@ -16,6 +16,7 @@ class ReadFile:
         # header of read file
         self.descriptive_header = []
         self.technical_header = []
+        self.context_dict = dict()
 
     def read_all(self):
         # read all from file
@@ -37,7 +38,7 @@ class ReadFile:
 
     def read_file_xml(self, path_xml_file):
         mydoc = minidom.parse(path_xml_file)
-        items = mydoc.getElementsByTagName('row')
+        items = mydoc.getElementsByTagName('row')[0:settings.NUMBER_OF_CONTENT_MESSAGES_TO_READ]
         return items
         # print items[8954].attributes["Id"].value
 
@@ -51,3 +52,8 @@ class ReadFile:
             else:
                 read_rows.append(row)
         return read_rows
+
+    def read_all_context(self, context):
+        for c in context:
+            path = settings.CONTEXT_FOLDER + "/" + c + settings.SUFFIX_CONTEXT_FILE
+            self.context_dict[c] = self.read_file_xml(path)
