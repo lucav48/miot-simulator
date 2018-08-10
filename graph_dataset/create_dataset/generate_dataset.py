@@ -2,7 +2,6 @@ import ReadFile
 import Neo4JManager
 import settings
 import random
-import ast
 import utilities
 import os
 import Node
@@ -10,8 +9,7 @@ import Transaction
 import write_dataset_to_file
 import re
 from threading import Thread
-import math
-import numpy as np
+
 
 # nodes is composed by 4 parts: descriptive, technical, travel path, code id
 def create_nodes(readFile):
@@ -42,7 +40,8 @@ def setup_and_create_connections(nodes_list):
         if (i+1) == len(threads):
             if interval * settings.NUMBER_OF_THREAD < len(nodes_list):
                 max_node += len(nodes_list) - (interval * settings.NUMBER_OF_THREAD)
-        threads[i] = Thread(target=create_connections, args=(nodes_list[min_node:max_node], results_list, i))
+        threads[i] = Thread(target=create_connections, args=(nodes_list, min_node, max_node,
+                                                             len(nodes_list), results_list, i))
         threads[i].start()
 
     for i in range(len(threads)):
@@ -52,10 +51,9 @@ def setup_and_create_connections(nodes_list):
     return results
 
 
-def create_connections(list_nodes, results, index):
+def create_connections(list_nodes, min_v, max_v, n_nodes, results, index):
     connections = []
-    n_nodes = len(list_nodes)
-    for i in range(n_nodes):
+    for i in range(min_v, max_v):
         node = list_nodes[i]
         node_path = utilities.literal_eval(node.travel_path)
         for j in range(i+1, n_nodes):
@@ -102,21 +100,21 @@ def create_transactions(nodes, con):
     while i < settings.NUMBER_OF_TRANSACTIONS:
         # choose node where create a new transaction
         node_start = random.choice(nodes)
-        node_end = random.choice(nodes)
-        while node_start == node_end:
-            node_end = random.choice(nodes)
-        # check if nodes are connected by a path in graph
-        result = neoManager.check_if_nodes_connected(node_start.code, node_end.code)
-        sign = node_start.code + "-" + node_end.code
-        if result == sign:
-            # choose context
-            context = choose_transaction_context(sign, con)
-            # choose message from context
-            message, timestamp = choose_message_from_context(context)
-            # create transaction
-            new_transaction = Transaction.Transaction(node_start.code, node_end.code, timestamp, context, message)
-            transactions_list.append(new_transaction)
-            i += 1
+        # choose a node connected to node_start
+        node_connected = neoManager.neo4j_retrieve_connected_node(node_start.code)
+        # check if node is isolated
+        if not node_connected:
+            continue
+        node_end = random.choice(node_connected)
+        sign = node_start.code + "-" + node_end
+        # choose context
+        context = choose_transaction_context(sign, con)
+        # choose message from context
+        message, timestamp = choose_message_from_context(context)
+        # create transaction/8
+        new_transaction = Transaction.Transaction(node_start.code, node_end, timestamp, context, message)
+        transactions_list.append(new_transaction)
+        i += 1
     return transactions_list
 
 
@@ -156,10 +154,10 @@ if __name__ == "__main__":
     # write neo4j queries to represent relationships
     neoManager.neo4j_create_connections(connections)
     print "Relationship created."
-    # # now I have to create transactions
-    # print "Start transactions creation."
-    # transactions = create_transactions(nodes, context)
-    # # write neo4j queries to represent those transactions
-    # neoManager.neo4j_add_transactions(transactions)
-    # print "Transactions creation completed."
-    # # write_dataset_to_file.write_to_file(neoManager)
+    # now I have to create transactions
+    print "Start transactions creation."
+    transactions = create_transactions(nodes, context)
+    # write neo4j queries to represent those transactions
+    neoManager.neo4j_add_transactions(transactions)
+    print "Transactions creation completed."
+    # write_dataset_to_file.write_to_file(neoManager)
