@@ -1,0 +1,6 @@
+id,hrf_unit,hrf_minval,hrf_maxval,descriptive_id
+1,RH,0,100,1
+2,hPa,300,1100,2
+3,C,-40,85,3
+4,C,-40,125,4
+5,C,-40,125,5

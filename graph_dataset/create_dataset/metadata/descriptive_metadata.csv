@@ -1,0 +1,6 @@
+id,sensor,parameter,datasheet
+1,htu21d,humidity,https://github.com/waggle-sensor/sensors/blob/master/sensors/airsense/htu21d.pdf
+2,bmp180,pressure,https://github.com/waggle-sensor/sensors/blob/master/sensors/airsense/bmp180.pdf
+3,bmp180,temperature,https://github.com/waggle-sensor/sensors/blob/master/sensors/airsense/bmp180.pdf
+4,htu21d,temperature,https://github.com/waggle-sensor/sensors/blob/master/sensors/airsense/htu21d.pdf
+5,tsys01,temperature,https://github.com/waggle-sensor/sensors/blob/master/sensors/airsense/tsys01.pdf

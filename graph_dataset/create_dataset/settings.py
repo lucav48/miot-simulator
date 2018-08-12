@@ -11,7 +11,7 @@ NUMBER_OF_THREAD = 4
 
 # folder structure
 METADATA_FOLDER = "metadata"
-CREATED_DATASET_FOLDER = "created_dataset"
+CREATED_DATASET_FOLDER = "dataset"
 DESCRIPTIVE_CSV = METADATA_FOLDER + "/" + "descriptive_metadata.csv"
 TECHNICAL_CSV = METADATA_FOLDER + "/" + "technical_metadata.csv"
 BEHAVIORAL_CSV = METADATA_FOLDER + "/" + "Posts.xml"
@@ -19,7 +19,7 @@ TRAVEL_CSV = METADATA_FOLDER + "/" + "travel_metadata.csv"
 CONTEXT_FOLDER = METADATA_FOLDER + "/" + "context"
 SUFFIX_CONTEXT_FILE = "Posts.xml"
 PREFIX_DATASET_FILE = CREATED_DATASET_FOLDER + "/" + "network-"
-CREATED_DATASET_EXTENSION = ".txt"
+CREATED_DATASET_EXTENSION = ".cyp"
 
 # neo4j settings
 NEO4J_URI = "bolt://localhost"

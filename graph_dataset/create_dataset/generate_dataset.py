@@ -1,12 +1,8 @@
-import ReadFile
-import Neo4JManager
+from graph_dataset.create_dataset.neo4JHandler import Neo4JManager, Node, Transaction
 import settings
 import random
-import utilities
+from graph_dataset.create_dataset.tools import utilities, ReadFile
 import os
-import Node
-import Transaction
-import write_dataset_to_file
 import re
 from threading import Thread
 
@@ -18,7 +14,8 @@ def create_nodes(readFile):
     travel_already_chosen = []
     while i < settings.NUMBER_OF_NODES:
         des = random.choice(readFile.descriptive_array)
-        tec = random.choice(readFile.technical_array)
+        # des[0] is id of that descriptive row
+        tec = choose_technical_given_descriptive(des[0])
         # travel has to be unique among nodes
         travel = random.choice(readFile.travel_array)
         while travel in travel_already_chosen:
@@ -28,6 +25,14 @@ def create_nodes(readFile):
         list_nodes.append(new_node)
         i += 1
     return list_nodes
+
+
+def choose_technical_given_descriptive(tec_id):
+    result = ""
+    for tec in readFile.technical_array:
+        if tec[-1] == tec_id:
+            result = tec
+    return result
 
 
 def setup_and_create_connections(nodes_list):
@@ -62,7 +67,6 @@ def create_connections(list_nodes, min_v, max_v, n_nodes, results, index):
             if connected:
                 connections.append(node.code + "-" + list_nodes[j].code)
     results[index] = connections
-    print connections
 
 
 def get_all_context():
@@ -160,4 +164,6 @@ if __name__ == "__main__":
     # write neo4j queries to represent those transactions
     neoManager.neo4j_add_transactions(transactions)
     print "Transactions creation completed."
-    # write_dataset_to_file.write_to_file(neoManager)
+    print "Started to write queries on db."
+    utilities.write_to_file(neoManager)
+    print "File ready to be loaded."
