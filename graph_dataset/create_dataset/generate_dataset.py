@@ -1,30 +1,25 @@
-from graph_dataset.create_dataset.neo4JHandler import Neo4JManager, Node, Transaction
+from graph_dataset.create_dataset.tools import utilities, ReadFile
+from threading import Thread
+from graph_dataset.create_dataset.neo4JHandler import Neo4JManager, Objects, Instance, Transaction
 import settings
 import random
-from graph_dataset.create_dataset.tools import utilities, ReadFile
 import os
 import re
-from threading import Thread
 
 
 # nodes is composed by 4 parts: descriptive, technical, travel path, code id
-def create_nodes(readFile):
+def create_objects():
     i = 0
-    list_nodes = []
-    travel_already_chosen = []
+    list_objects = []
     while i < settings.NUMBER_OF_NODES:
         des = random.choice(readFile.descriptive_array)
         # des[0] is id of that descriptive row
         tec = choose_technical_given_descriptive(des[0])
-        # travel has to be unique among nodes
-        travel = random.choice(readFile.travel_array)
-        while travel in travel_already_chosen:
-            travel = random.choice(readFile.travel_array)
         code = str(i)
-        new_node = Node.Node(des, tec, travel, code, "")
-        list_nodes.append(new_node)
+        new_node = Objects.Objects(des, tec, code, [])
+        list_objects.append(new_node)
         i += 1
-    return list_nodes
+    return list_objects
 
 
 def choose_technical_given_descriptive(tec_id):
@@ -35,18 +30,27 @@ def choose_technical_given_descriptive(tec_id):
     return result
 
 
-def setup_and_create_connections(nodes_list):
+def get_instances(list_objects):
+    list_instances = []
+    for one_object in list_objects:
+        for i in one_object.instances:
+            list_instances.append(i)
+    return list_instances
+
+
+def setup_and_create_connections(list_instances):
     threads = [None] * settings.NUMBER_OF_THREAD
     results_list = [None] * settings.NUMBER_OF_THREAD
-    interval = int(len(nodes_list) / settings.NUMBER_OF_THREAD)
+    interval = int(len(list_instances) / settings.NUMBER_OF_THREAD)
+    all_instances = get_instances(objects)
     for i in range(len(threads)):
-        min_node = interval * i
-        max_node = interval * (i+1)
+        min_instance = interval * i
+        max_instance = interval * (i+1)
         if (i+1) == len(threads):
-            if interval * settings.NUMBER_OF_THREAD < len(nodes_list):
-                max_node += len(nodes_list) - (interval * settings.NUMBER_OF_THREAD)
-        threads[i] = Thread(target=create_connections, args=(nodes_list, min_node, max_node,
-                                                             len(nodes_list), results_list, i))
+            if interval * settings.NUMBER_OF_THREAD < len(list_instances):
+                max_instance += len(list_instances) - (interval * settings.NUMBER_OF_THREAD)
+        threads[i] = Thread(target=create_connections, args=(all_instances, min_instance, max_instance,
+                                                             len(list_instances), results_list, i))
         threads[i].start()
 
     for i in range(len(threads)):
@@ -56,24 +60,24 @@ def setup_and_create_connections(nodes_list):
     return results
 
 
-def create_connections(list_nodes, min_v, max_v, n_nodes, results, index):
+def create_connections(list_instances, min_v, max_v, n_instances, results, index):
     connections = []
     for i in range(min_v, max_v):
-        node = list_nodes[i]
-        node_path = utilities.literal_eval(node.travel_path)
-        for j in range(i+1, n_nodes):
-            other_node_path = utilities.literal_eval(list_nodes[j].travel_path)
-            connected = utilities.check_two_paths(node_path, other_node_path)
+        instance = list_instances[i]
+        instance_path = utilities.literal_eval(instance.travel_path)
+        for j in range(i+1, n_instances):
+            other_node_path = utilities.literal_eval(list_instances[j].travel_path)
+            connected = utilities.check_two_paths(instance_path, other_node_path)
             if connected:
-                connections.append(node.code + "-" + list_nodes[j].code)
+                connections.append(instance.code + "-" + list_instances[j].code)
     results[index] = connections
 
 
 def get_all_context():
-    context = dict()
+    list_context = dict()
     for x in os.listdir(settings.CONTEXT_FOLDER):
-        context[x.split(settings.SUFFIX_CONTEXT_FILE)[0]] = []
-    return context
+        list_context[x.split(settings.SUFFIX_CONTEXT_FILE)[0]] = []
+    return list_context
 
 
 def choose_transaction_context(sign, all_context):
@@ -98,27 +102,26 @@ def choose_transaction_context(sign, all_context):
     return content_result
 
 
-def create_transactions(nodes, con):
+def create_transactions(list_instances, con):
     i = 0
     transactions_list = []
     while i < settings.NUMBER_OF_TRANSACTIONS:
         # choose node where create a new transaction
-        node_start = random.choice(nodes)
+        instance_start = random.choice(list_instances)
         # choose a node connected to node_start
-        node_connected = neoManager.neo4j_retrieve_connected_node(node_start.code)
+        instance_connected = neoManager.neo4j_retrieve_connected_instances(instance_start.code)
         # check if node is isolated
-        if not node_connected:
-            continue
-        node_end = random.choice(node_connected)
-        sign = node_start.code + "-" + node_end
-        # choose context
-        context = choose_transaction_context(sign, con)
-        # choose message from context
-        message, timestamp = choose_message_from_context(context)
-        # create transaction/8
-        new_transaction = Transaction.Transaction(node_start.code, node_end, timestamp, context, message)
-        transactions_list.append(new_transaction)
-        i += 1
+        if instance_connected:
+            instance_end = random.choice(instance_connected)
+            sign = instance_start.code + "-" + instance_end
+            # choose context
+            new_context = choose_transaction_context(sign, con)
+            # choose message from context
+            message, timestamp = choose_message_from_context(new_context)
+            # create transaction/8
+            new_transaction = Transaction.Transaction(instance_start.code, instance_end, timestamp, new_context, message)
+            transactions_list.append(new_transaction)
+            i += 1
     return transactions_list
 
 
@@ -133,37 +136,81 @@ def choose_message_from_context(con):
     return message, timestamp
 
 
-if __name__ == "__main__":
-    # read data useful to create nodes
-    print "Read and prepare to create dataset"
-    readFile = ReadFile.ReadFile()
-    neoManager = Neo4JManager.Neo4JManager()
+def create_instances_of_objects(object_list):
+    travel_already_chosen = []
+    for one_object in object_list:
+        if isinstance(settings.NUMBER_OF_INSTANCES, (list,)):
+            num_instance = random.choice(settings.NUMBER_OF_INSTANCES)
+        else:
+            num_instance = settings.NUMBER_OF_INSTANCES
+
+        for i in range(0, num_instance):
+            # travel has to be unique among nodes
+            travel = random.choice(readFile.travel_array)
+            while travel in travel_already_chosen:
+                travel = random.choice(readFile.travel_array)
+            instance_code = one_object.code + ":" + str(i)
+            one_object.instances.append(Instance.Instance(travel, instance_code))
+
+
+def prepare_environment():
     # read metadata
     print "Read metadata."
     readFile.read_all()
     # read content files
     print "Read context file."
-    context = get_all_context()
-    readFile.read_all_context(context)
+    all_context = get_all_context()
+    readFile.read_all_context(all_context)
     print "Ready to start!"
-    # create a list of nodes
-    print "Node creation.."
-    nodes = create_nodes(readFile)
+    return all_context
+
+
+def prepare_nodes():
+    # create a list of object
+    print "Objects creation.."
+    list_objects = create_objects()
     # write neo4j queries to represent those nodes
-    neoManager.neo4j_create_nodes(nodes)
-    print "Nodes created."
+    neoManager.neo4j_create_objects(list_objects)
+    print "Objects created."
+    # create instances of each object
+    create_instances_of_objects(list_objects)
+    all_instances = get_instances(list_objects)
+    # create relationship between object and its instances
+    neoManager.neo4j_create_objects_instances(list_objects)
+    return list_objects, all_instances
+
+
+def prepare_nodes_connections(list_objects):
     # look for connections among nodes
     print "Relationship creation.."
-    connections = setup_and_create_connections(nodes)
+    connections = setup_and_create_connections(list_objects)
     # write neo4j queries to represent relationships
     neoManager.neo4j_create_connections(connections)
     print "Relationship created."
+
+
+def prepare_transactions(list_instances, list_context):
     # now I have to create transactions
     print "Start transactions creation."
-    transactions = create_transactions(nodes, context)
+    transactions = create_transactions(list_instances, list_context)
     # write neo4j queries to represent those transactions
     neoManager.neo4j_add_transactions(transactions)
     print "Transactions creation completed."
+
+
+def print_neo4j_queries():
     print "Started to write queries on db."
     utilities.write_to_file(neoManager)
     print "File ready to be loaded."
+
+
+if __name__ == "__main__":
+    # read data useful to create nodes
+    print "Read and prepare to create dataset"
+    readFile = ReadFile.ReadFile()
+    neoManager = Neo4JManager.Neo4JManager()
+    context = prepare_environment()
+    objects, instances = prepare_nodes()
+    prepare_nodes_connections(objects)
+    prepare_transactions(instances, context)
+    print_neo4j_queries()

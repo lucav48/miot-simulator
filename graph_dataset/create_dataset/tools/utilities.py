@@ -1,5 +1,5 @@
 from math import radians, cos, sin, asin, sqrt
-import graph_dataset.create_dataset.settings
+import graph_dataset.create_dataset.settings as settings
 import ast
 import time
 
@@ -27,7 +27,7 @@ def check_two_paths(big_path1, big_path2):
 
 # point is a list [longitude, latitude]
 def two_points_are_close(point1, point2):
-    if haversine(point1[0], point1[1], point2[0], point2[1]) < graph_dataset.create_dataset.settings.LIMIT_METER_CONNECTION:
+    if haversine(point1[0], point1[1], point2[0], point2[1]) < settings.LIMIT_METER_CONNECTION:
         return True
     else:
         return False
@@ -52,12 +52,15 @@ def haversine(lon1, lat1, lon2, lat2):
 
 def write_to_file(neoManager):
     timestr = time.strftime("%Y%m%d-%H%M%S")
-    output_file = open(
-        graph_dataset.create_dataset.settings.PREFIX_DATASET_FILE + timestr + graph_dataset.create_dataset.settings.CREATED_DATASET_EXTENSION, "w")
+    output_file = open(settings.PREFIX_DATASET_FILE + timestr + settings.CREATED_DATASET_EXTENSION, "w")
 
-    # add nodes
+    # add objects
     output_file.write(":begin\n")
     output_file.write(neoManager.neo4j_create_nodes_query.encode('utf-8'))
+    output_file.write("\n:commit\n")
+    # add objects
+    output_file.write(":begin\n")
+    output_file.write(neoManager.neo4j_create_instances_query.encode('utf-8'))
     output_file.write("\n:commit\n")
     # add relationships
     output_file.write(":begin\n")

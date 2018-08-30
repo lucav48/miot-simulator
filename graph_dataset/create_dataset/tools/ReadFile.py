@@ -1,4 +1,4 @@
-import graph_dataset.create_dataset.settings
+import graph_dataset.create_dataset.settings as settings
 import csv
 from xml.dom import minidom
 
@@ -6,9 +6,9 @@ from xml.dom import minidom
 class ReadFile:
 
     def __init__(self):
-        self.descriptive_path_file = graph_dataset.create_dataset.settings.DESCRIPTIVE_CSV
-        self.technical_path_file = graph_dataset.create_dataset.settings.TECHNICAL_CSV
-        self.travel_path_file = graph_dataset.create_dataset.settings.TRAVEL_CSV
+        self.descriptive_path_file = settings.DESCRIPTIVE_CSV
+        self.technical_path_file = settings.TECHNICAL_CSV
+        self.travel_path_file = settings.TRAVEL_CSV
         # data from files
         self.descriptive_array = []
         self.technical_array = []
@@ -38,7 +38,7 @@ class ReadFile:
 
     def read_file_xml(self, path_xml_file):
         mydoc = minidom.parse(path_xml_file)
-        items = mydoc.getElementsByTagName('row')[0:graph_dataset.create_dataset.settings.NUMBER_OF_CONTENT_MESSAGES_TO_READ]
+        items = mydoc.getElementsByTagName('row')[0:settings.NUMBER_OF_CONTENT_MESSAGES_TO_READ]
         return items
         # print items[8954].attributes["Id"].value
 
@@ -47,7 +47,7 @@ class ReadFile:
         csv_file = open(path_csv_file, 'r')
         reader = csv.reader(csv_file, delimiter=',')
         for row in reader:
-            if path_csv_file == graph_dataset.create_dataset.settings.TRAVEL_CSV:
+            if path_csv_file == settings.TRAVEL_CSV:
                 read_rows.append(row[8])
             else:
                 read_rows.append(row)
@@ -55,5 +55,5 @@ class ReadFile:
 
     def read_all_context(self, context):
         for c in context:
-            path = graph_dataset.create_dataset.settings.CONTEXT_FOLDER + "/" + c + graph_dataset.create_dataset.settings.SUFFIX_CONTEXT_FILE
+            path = settings.CONTEXT_FOLDER + "/" + c + settings.SUFFIX_CONTEXT_FILE
             self.context_dict[c] = self.read_file_xml(path)
