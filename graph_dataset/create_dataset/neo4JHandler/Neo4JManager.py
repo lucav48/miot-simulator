@@ -83,7 +83,7 @@ class Neo4JManager:
         query = "MATCH (a:" + self.instance_label + "), (b:" + self.instance_label + ") " \
                 + "WHERE a.code = '" + instance_code + "'" \
                 + "AND (a)-[:" + self.relation_between_instances_label + "]-(b) " \
-                + "RETURN b.code"
+                + "RETURN b.code LIMIT 50"
         query_result = self.execute_query(query)
         for x in query_result:
             result.append(x["b.code"])

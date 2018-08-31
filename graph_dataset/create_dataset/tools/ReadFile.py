@@ -1,4 +1,5 @@
 import graph_dataset.create_dataset.settings as settings
+import utilities
 import csv
 from xml.dom import minidom
 
@@ -22,7 +23,10 @@ class ReadFile:
         # read all from file
         self.descriptive_array = self.read_file(self.descriptive_path_file)
         self.technical_array = self.read_file(self.technical_path_file)
-        self.travel_array = self.read_file(self.travel_path_file)
+        travels = self.read_file(self.travel_path_file)
+        # delete first row that is the table caption
+        travels.pop(0)
+        self.travel_array = utilities.prepare_travel_array(travels)
         # get only header of data
         self.descriptive_header = self.descriptive_array[0]
         del self.descriptive_array[0]
@@ -48,7 +52,8 @@ class ReadFile:
         reader = csv.reader(csv_file, delimiter=',')
         for row in reader:
             if path_csv_file == settings.TRAVEL_CSV:
-                read_rows.append(row[8])
+                if row[-1] != '[]':
+                    read_rows.append(row[-1])
             else:
                 read_rows.append(row)
         return read_rows

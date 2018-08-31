@@ -1,5 +1,7 @@
 from math import radians, cos, sin, asin, sqrt
 import graph_dataset.create_dataset.settings as settings
+from shapely.geometry import LineString, Point
+from shapely.ops import nearest_points
 import ast
 import time
 
@@ -15,14 +17,18 @@ def literal_eval(string):
         return []
 
 
+# def check_two_paths(big_path1, big_path2):
+#     connected = False
+#     for path in big_path1:
+#         if not connected:
+#             for other_path in big_path2:
+#                 if not connected and two_points_are_close(path, other_path):
+#                     connected = True
+#     return connected
+
 def check_two_paths(big_path1, big_path2):
-    connected = False
-    for path in big_path1:
-        if not connected:
-            for other_path in big_path2:
-                if not connected and two_points_are_close(path, other_path):
-                    connected = True
-    return connected
+    points = nearest_points(big_path1, big_path2)
+    return two_points_are_close([points[0].x, points[0].y], [points[1].x, points[1].y])
 
 
 # point is a list [longitude, latitude]
@@ -71,3 +77,28 @@ def write_to_file(neoManager):
     output_file.write(neoManager.neo4j_create_transactions_query.encode('utf-8'))
     output_file.write("\n:commit\n")
     output_file.close()
+
+
+def prepare_travel_array(list_travel):
+    final_travel = []
+    for travel in list_travel:
+        new_travel = []
+        app_travel = travel[1:-1].replace("[", "").replace("]", "").split(",")
+        for i in range(0, len(app_travel), 2):
+            try:
+                if check_numbers(app_travel[i], app_travel[i+1]):
+                    new_travel.append((float(app_travel[i]), float(app_travel[i+1])))
+            except IndexError:
+                continue
+        if len(new_travel) == 1:
+            final_travel.append(Point(new_travel))
+        else:
+            final_travel.append(LineString(new_travel))
+    return final_travel
+
+
+def check_numbers(num1, num2):
+    if complex(num1) and complex(num2):
+        return True
+    else:
+        return False

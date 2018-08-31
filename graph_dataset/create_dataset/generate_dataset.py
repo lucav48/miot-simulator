@@ -1,4 +1,6 @@
 from graph_dataset.create_dataset.tools import utilities, ReadFile
+from shapely.geometry import LineString
+from shapely.ops import nearest_points
 from threading import Thread
 from graph_dataset.create_dataset.neo4JHandler import Neo4JManager, Objects, Instance, Transaction
 import settings
@@ -64,10 +66,10 @@ def create_connections(list_instances, min_v, max_v, n_instances, results, index
     connections = []
     for i in range(min_v, max_v):
         instance = list_instances[i]
-        instance_path = utilities.literal_eval(instance.travel_path)
+        instance_path = instance.travel_path
         for j in range(i+1, n_instances):
-            other_node_path = utilities.literal_eval(list_instances[j].travel_path)
-            connected = utilities.check_two_paths(instance_path, other_node_path)
+            other_instance_path = list_instances[j].travel_path
+            connected = utilities.check_two_paths(instance_path, other_instance_path)
             if connected:
                 connections.append(instance.code + "-" + list_instances[j].code)
     results[index] = connections
@@ -137,7 +139,6 @@ def choose_message_from_context(con):
 
 
 def create_instances_of_objects(object_list):
-    travel_already_chosen = []
     for one_object in object_list:
         if isinstance(settings.NUMBER_OF_INSTANCES, (list,)):
             num_instance = random.choice(settings.NUMBER_OF_INSTANCES)
@@ -146,9 +147,9 @@ def create_instances_of_objects(object_list):
 
         for i in range(0, num_instance):
             # travel has to be unique among nodes
-            travel = random.choice(readFile.travel_array)
-            while travel in travel_already_chosen:
-                travel = random.choice(readFile.travel_array)
+            travel_index = random.choice(range(0, len(readFile.travel_array)))
+            travel = readFile.travel_array[travel_index]
+            del readFile.travel_array[travel_index]
             instance_code = one_object.code + ":" + str(i)
             one_object.instances.append(Instance.Instance(travel, instance_code))
 
