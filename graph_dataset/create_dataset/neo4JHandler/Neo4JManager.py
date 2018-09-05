@@ -97,7 +97,8 @@ class Neo4JManager:
             for instance in one_object.instances:
                 query = "MATCH(n:" + self.object_label + ") " \
                         + "WHERE n.code = '" + one_object.code + "' " \
-                        + "CREATE (i:" + self.instance_label + " {code:'" + instance.code + "'}) " \
+                        + "CREATE (i:" + self.instance_label + " {code:'" + instance.code + "'," \
+                                                                "community:'" + instance.community + "'}) " \
                         + "CREATE UNIQUE (n) - [r:" + self.relation_object_instance_label + "]->(i) " \
                         + "RETURN r"
                 self.neo4j_create_instances_query = self.neo4j_create_instances_query + "\n" + query + ";"

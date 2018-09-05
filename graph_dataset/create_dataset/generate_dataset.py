@@ -1,6 +1,4 @@
 from graph_dataset.create_dataset.tools import utilities, ReadFile
-from shapely.geometry import LineString
-from shapely.ops import nearest_points
 from threading import Thread
 from graph_dataset.create_dataset.neo4JHandler import Neo4JManager, Objects, Instance, Transaction
 import settings
@@ -13,15 +11,24 @@ import re
 def create_objects():
     i = 0
     list_objects = []
+    list_instances = settings.NUMBER_OF_INSTANCES
     while i < settings.NUMBER_OF_NODES:
         des = random.choice(readFile.descriptive_array)
         # des[0] is id of that descriptive row
         tec = choose_technical_given_descriptive(des[0])
         code = str(i)
-        new_node = Objects.Objects(des, tec, code, [])
+        num_instances, list_instances = get_num_instances(list_instances)
+        new_node = Objects.Objects(des, tec, code, [], num_instances)
         list_objects.append(new_node)
         i += 1
     return list_objects
+
+
+def get_num_instances(num_instances):
+    availables = [i for i, e in enumerate(num_instances) if e != 0]
+    pos = random.choice(availables)
+    num_instances[pos] -= 1
+    return pos + 1, num_instances
 
 
 def choose_technical_given_descriptive(tec_id):
@@ -40,19 +47,19 @@ def get_instances(list_objects):
     return list_instances
 
 
-def setup_and_create_connections(list_instances):
+def setup_and_create_connections(list_object):
     threads = [None] * settings.NUMBER_OF_THREAD
     results_list = [None] * settings.NUMBER_OF_THREAD
-    interval = int(len(list_instances) / settings.NUMBER_OF_THREAD)
-    all_instances = get_instances(objects)
+    all_instances = get_instances(list_object)
+    interval = int(len(all_instances) / settings.NUMBER_OF_THREAD)
     for i in range(len(threads)):
         min_instance = interval * i
         max_instance = interval * (i+1)
         if (i+1) == len(threads):
-            if interval * settings.NUMBER_OF_THREAD < len(list_instances):
-                max_instance += len(list_instances) - (interval * settings.NUMBER_OF_THREAD)
+            if interval * settings.NUMBER_OF_THREAD < len(all_instances):
+                max_instance += len(all_instances) - (interval * settings.NUMBER_OF_THREAD)
         threads[i] = Thread(target=create_connections, args=(all_instances, min_instance, max_instance,
-                                                             len(list_instances), results_list, i))
+                                                             len(all_instances), results_list, i))
         threads[i].start()
 
     for i in range(len(threads)):
@@ -66,13 +73,12 @@ def create_connections(list_instances, min_v, max_v, n_instances, results, index
     connections = []
     for i in range(min_v, max_v):
         instance = list_instances[i]
-        instance_path = instance.travel_path
         for j in range(i+1, n_instances):
-            other_instance_path = list_instances[j].travel_path
-            connected = utilities.check_two_paths(instance_path, other_instance_path)
+            connected = utilities.check_two_paths(instance.travel_path, list_instances[j].travel_path)
             if connected:
                 connections.append(instance.code + "-" + list_instances[j].code)
     results[index] = connections
+    print "Thread ", index, " finished to work."
 
 
 def get_all_context():
@@ -140,18 +146,14 @@ def choose_message_from_context(con):
 
 def create_instances_of_objects(object_list):
     for one_object in object_list:
-        if isinstance(settings.NUMBER_OF_INSTANCES, (list,)):
-            num_instance = random.choice(settings.NUMBER_OF_INSTANCES)
-        else:
-            num_instance = settings.NUMBER_OF_INSTANCES
-
-        for i in range(0, num_instance):
+        for i in range(0, one_object.num_instances):
             # travel has to be unique among nodes
             travel_index = random.choice(range(0, len(readFile.travel_array)))
-            travel = readFile.travel_array[travel_index]
+            travel = utilities.travel_to_dataframe(readFile.travel_array[travel_index])
             del readFile.travel_array[travel_index]
             instance_code = one_object.code + ":" + str(i)
-            one_object.instances.append(Instance.Instance(travel, instance_code))
+            num_community = random.choice(range(1, settings.NUMBER_OF_COMMUNITIES + 1))
+            one_object.instances.append(Instance.Instance(travel, instance_code, num_community))
 
 
 def prepare_environment():
@@ -185,6 +187,7 @@ def prepare_nodes_connections(list_objects):
     # look for connections among nodes
     print "Relationship creation.."
     connections = setup_and_create_connections(list_objects)
+    print connections
     # write neo4j queries to represent relationships
     neoManager.neo4j_create_connections(connections)
     print "Relationship created."

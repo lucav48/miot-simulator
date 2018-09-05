@@ -1,9 +1,9 @@
 from math import radians, cos, sin, asin, sqrt
 import graph_dataset.create_dataset.settings as settings
-from shapely.geometry import LineString, Point
-from shapely.ops import nearest_points
 import ast
 import time
+import numpy as np
+import pandas
 
 
 def list_to_string(my_list):
@@ -17,23 +17,63 @@ def literal_eval(string):
         return []
 
 
-# def check_two_paths(big_path1, big_path2):
-#     connected = False
-#     for path in big_path1:
-#         if not connected:
-#             for other_path in big_path2:
-#                 if not connected and two_points_are_close(path, other_path):
-#                     connected = True
-#     return connected
+def check_two_paths_every_point(big_path1, big_path2):
+    for [lon1, lat1] in big_path1.values:
+        for [lon2, lat2] in big_path2.values:
+            if haversine(lon1, lat1, lon2, lat2) < settings.LIMIT_METER_CONNECTION:
+                return True
+    return False
+    # df = pandas.DataFrame(data={'lon': [lon1] * len(big_path1),
+    #                             'lat': [lat1] * len(big_path1)})
+    # distances = haversine_np(lon1, lat1,
+    #                          big_path2['lon'], big_path2['lat'])
+    # if np.nanmin(distances.values) < settings.LIMIT_METER_CONNECTION:
+    #     return True
+    # return False
+
+
+def check_two_paths_entire_way(big_path1, big_path2):
+        # check paths like they are moving together
+        distances = haversine_np(big_path1['lon'], big_path1['lat'],
+                                 big_path2['lon'], big_path2['lat'])
+        if np.nanmin(distances.values) < settings.LIMIT_METER_CONNECTION:
+            return True
+        else:
+            return False
+
 
 def check_two_paths(big_path1, big_path2):
-    points = nearest_points(big_path1, big_path2)
-    return two_points_are_close([points[0].x, points[0].y], [points[1].x, points[1].y])
+    if settings.CHECK_EVERY_POINT:
+        # check every point of first path to entire second path
+        return check_two_paths_every_point(big_path1, big_path2)
+    else:
+        return check_two_paths_entire_way(big_path1, big_path2)
+
+
+def haversine_np(lon1, lat1, lon2, lat2):
+    """
+    Calculate the great circle distance between two points
+    on the earth (specified in decimal degrees)
+
+    All args must be of equal length.
+
+    """
+    lon1, lat1, lon2, lat2 = map(np.radians, [lon1, lat1, lon2, lat2])
+
+    dlon = lon2 - lon1
+    dlat = lat2 - lat1
+
+    a = np.sin(dlat/2.0)**2 + np.cos(lat1) * np.cos(lat2) * np.sin(dlon/2.0)**2
+
+    c = 2 * np.arcsin(np.sqrt(a))
+    meters = 6367 * c * 1000
+
+    return meters
 
 
 # point is a list [longitude, latitude]
-def two_points_are_close(point1, point2):
-    if haversine(point1[0], point1[1], point2[0], point2[1]) < settings.LIMIT_METER_CONNECTION:
+def two_points_are_close(lot1, lat1, lot2, lat2):
+    if haversine(lot1, lat1, lot2, lat2) < settings.LIMIT_METER_CONNECTION:
         return True
     else:
         return False
@@ -91,9 +131,9 @@ def prepare_travel_array(list_travel):
             except IndexError:
                 continue
         if len(new_travel) == 1:
-            final_travel.append(Point(new_travel))
+            final_travel.append(new_travel)
         else:
-            final_travel.append(LineString(new_travel))
+            final_travel.append(new_travel)
     return final_travel
 
 
@@ -102,3 +142,12 @@ def check_numbers(num1, num2):
         return True
     else:
         return False
+
+
+def travel_to_dataframe(travel):
+    lon = []
+    lat = []
+    for element in travel:
+        lon.append(element[0])
+        lat.append(element[1])
+    return pandas.DataFrame(data={'lon': lon, 'lat': lat})
