@@ -11,6 +11,7 @@ class Neo4JManager:
         self.neo4j_create_instances_query = ""
         self.neo4j_create_connections_query = ""
         self.neo4j_create_transactions_query = ""
+        self.neo4j_adjust_communities_query = ""
         # load settings
         self.object_label = settings.NEO4J_OBJECT_LABEL
         self.instance_label = settings.NEO4J_INSTANCE_LABEL
@@ -23,7 +24,7 @@ class Neo4JManager:
                                             auth=basic_auth(settings.NEO4J_USERNAME, settings.NEO4J_PASSWORD))
         self.session = self._driver.session()
         # clear all previously nodes and relationship
-        self.session.run(settings.NEO4J_DELETE_NODES)
+        # self.session.run(settings.NEO4J_DELETE_NODES)
 
     def neo4j_create_objects(self, list_object):
         # + "', travel:' " + node.travel_path \
@@ -103,3 +104,33 @@ class Neo4JManager:
                         + "RETURN r"
                 self.neo4j_create_instances_query = self.neo4j_create_instances_query + "\n" + query + ";"
                 self.execute_query(query)
+
+    def neo4j_get_nodes_not_linked_in_community(self, community_code):
+        query = "MATCH(n:Instance) " \
+                + "WHERE n.community = '" + str(community_code) + "' " \
+                + "WITH n OPTIONAL MATCH(n) - [r:LINKED]-(n2:Instance) " \
+                + "WHERE n2.community = '" + str(community_code) + "' "\
+                + "WITH n, n2 WHERE n2 is null RETURN n.code as code"
+        query_result = self.execute_query(query)
+        result = []
+        for x in query_result:
+            result.append(x["code"])
+        return result
+
+    def neo4j_get_most_linked_community(self, node_code):
+        query = "MATCH(n:Instance)-[r:" + self.relation_between_instances_label + "]-(n2:Instance) " \
+                + "WHERE n.code = '" + node_code + "' " \
+                + "RETURN n2.community AS community, COUNT(n2.community) AS cont " \
+                + "ORDER BY cont DESC LIMIT 1"
+        query_result = self.execute_query(query)
+        result = {}
+        for x in query_result:
+            result["community"] = x["community"]
+        return result
+
+    def neo4j_change_community_of_node(self, node_code, new_community):
+        query = "MATCH(n:Instance) " \
+                + "WHERE n.code = '" + node_code + "' " \
+                + "SET n.community = '" + new_community + "' "
+        self.neo4j_adjust_communities_query = self.neo4j_adjust_communities_query + "\n" + query + ";"
+        self.execute_query(query)

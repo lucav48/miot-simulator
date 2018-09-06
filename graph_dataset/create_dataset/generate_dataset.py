@@ -187,7 +187,6 @@ def prepare_nodes_connections(list_objects):
     # look for connections among nodes
     print "Relationship creation.."
     connections = setup_and_create_connections(list_objects)
-    print connections
     # write neo4j queries to represent relationships
     neoManager.neo4j_create_connections(connections)
     print "Relationship created."
@@ -208,13 +207,26 @@ def print_neo4j_queries():
     print "File ready to be loaded."
 
 
+def adjust_communities():
+    for i in range(settings.NUMBER_OF_COMMUNITIES):
+        alone_nodes = neoManager.neo4j_get_nodes_not_linked_in_community(i + 1)
+        for node in alone_nodes:
+            neighbours = neoManager.neo4j_get_most_linked_community(node)
+            if neighbours:
+                new_community = neighbours["community"]
+                neoManager.neo4j_change_community_of_node(node, new_community)
+
+
 if __name__ == "__main__":
     # read data useful to create nodes
+    utilities.print_date()
     print "Read and prepare to create dataset"
     readFile = ReadFile.ReadFile()
     neoManager = Neo4JManager.Neo4JManager()
-    context = prepare_environment()
-    objects, instances = prepare_nodes()
-    prepare_nodes_connections(objects)
-    prepare_transactions(instances, context)
+    # context = prepare_environment()
+    # objects, instances = prepare_nodes()
+    # prepare_nodes_connections(objects)
+    # prepare_transactions(instances, context)
+    adjust_communities()
     print_neo4j_queries()
+    utilities.print_date()

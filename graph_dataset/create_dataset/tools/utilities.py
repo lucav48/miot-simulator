@@ -23,13 +23,6 @@ def check_two_paths_every_point(big_path1, big_path2):
             if haversine(lon1, lat1, lon2, lat2) < settings.LIMIT_METER_CONNECTION:
                 return True
     return False
-    # df = pandas.DataFrame(data={'lon': [lon1] * len(big_path1),
-    #                             'lat': [lat1] * len(big_path1)})
-    # distances = haversine_np(lon1, lat1,
-    #                          big_path2['lon'], big_path2['lat'])
-    # if np.nanmin(distances.values) < settings.LIMIT_METER_CONNECTION:
-    #     return True
-    # return False
 
 
 def check_two_paths_entire_way(big_path1, big_path2):
@@ -116,6 +109,10 @@ def write_to_file(neoManager):
     output_file.write(":begin\n")
     output_file.write(neoManager.neo4j_create_transactions_query.encode('utf-8'))
     output_file.write("\n:commit\n")
+    # adjust communities transactions
+    output_file.write(":begin\n")
+    output_file.write(neoManager.neo4j_adjust_communities_query.encode('utf-8'))
+    output_file.write("\n:commit\n")
     output_file.close()
 
 
@@ -151,3 +148,7 @@ def travel_to_dataframe(travel):
         lon.append(element[0])
         lat.append(element[1])
     return pandas.DataFrame(data={'lon': lon, 'lat': lat})
+
+
+def print_date():
+    print "Script started at " + time.strftime("%H:%M:%S")
