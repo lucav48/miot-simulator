@@ -1,6 +1,7 @@
-from graph_dataset.create_dataset.tools import utilities, ReadFile
+from graph_dataset.create_dataset.tools import utilities, ReadFile, write_file
+from graph_dataset.create_dataset.neo4JHandler import Neo4JManager
+from graph_dataset.create_dataset.neo4JHandler.neo4JObject import Objects, Instance, Transaction
 from threading import Thread
-from graph_dataset.create_dataset.neo4JHandler import Neo4JManager, Objects, Instance, Transaction
 import settings
 import random
 import os
@@ -204,7 +205,7 @@ def prepare_transactions(list_instances, list_context):
 
 def print_neo4j_queries():
     print "Started to write queries on db."
-    utilities.write_to_file(neoManager)
+    write_file.write_to_file(neoManager)
     print "File ready to be loaded."
 
 

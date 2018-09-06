@@ -23,11 +23,6 @@ SUFFIX_CONTEXT_FILE = "Posts.xml"
 PREFIX_DATASET_FILE = CREATED_DATASET_FOLDER + "/" + "network-"
 CREATED_DATASET_EXTENSION = ".cyp"
 
-# neo4j settings
-NEO4J_URI = "bolt://localhost"
-NEO4J_USERNAME = "neo4j"
-NEO4J_PASSWORD = "python"
-
 # neo4j label and relationship name
 NEO4J_DELETE_NODES = "MATCH (n) DETACH DELETE n"
 NEO4J_RELATION_INSTANCE_TYPE = "LINKED"

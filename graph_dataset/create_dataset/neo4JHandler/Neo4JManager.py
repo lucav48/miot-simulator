@@ -1,11 +1,13 @@
 import graph_dataset.create_dataset.tools.utilities as utilities
 import graph_dataset.create_dataset.settings as settings
-from neo4j.v1 import GraphDatabase, basic_auth
+from Neo4JInstance import Neo4JInstance
 
 
-class Neo4JManager:
+class Neo4JManager(Neo4JInstance):
 
     def __init__(self):
+        # get neo4j instance
+        Neo4JInstance.__init__(self)
         # query to write to file
         self.neo4j_create_nodes_query = ""
         self.neo4j_create_instances_query = ""
@@ -20,10 +22,6 @@ class Neo4JManager:
         self.relation_between_instances_label = settings.NEO4J_RELATION_INSTANCE_TYPE
         self.relation_object_instance_label = settings.NEO4J_RELATION_OBJECT_INSTANCE_TYPE
         self.relation_transaction_label = settings.NEO4J_RELATION_TRANSACTION_TYPE
-        # get instance of graph db
-        self._driver = GraphDatabase.driver(settings.NEO4J_URI,
-                                            auth=basic_auth(settings.NEO4J_USERNAME, settings.NEO4J_PASSWORD))
-        self.session = self._driver.session()
         # clear all previously nodes and relationship
         self.session.run(settings.NEO4J_DELETE_NODES)
 
