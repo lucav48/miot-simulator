@@ -1,5 +1,6 @@
 class Transaction:
-    def __init__(self, s, d, dt, con, mes):
+    def __init__(self, c, s, d, dt, con, mes):
+        self.code = str(c)
         self.source = s
         self.destination = d
         self.timestamp = dt

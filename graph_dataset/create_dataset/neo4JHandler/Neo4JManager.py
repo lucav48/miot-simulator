@@ -12,6 +12,7 @@ class Neo4JManager:
         self.neo4j_create_connections_query = ""
         self.neo4j_create_transactions_query = ""
         self.neo4j_adjust_communities_query = ""
+        self.neo4j_delete_isolated_nodes_query = ""
         # load settings
         self.object_label = settings.NEO4J_OBJECT_LABEL
         self.instance_label = settings.NEO4J_INSTANCE_LABEL
@@ -24,7 +25,7 @@ class Neo4JManager:
                                             auth=basic_auth(settings.NEO4J_USERNAME, settings.NEO4J_PASSWORD))
         self.session = self._driver.session()
         # clear all previously nodes and relationship
-        # self.session.run(settings.NEO4J_DELETE_NODES)
+        self.session.run(settings.NEO4J_DELETE_NODES)
 
     def neo4j_create_objects(self, list_object):
         # + "', travel:' " + node.travel_path \
@@ -61,18 +62,17 @@ class Neo4JManager:
         for transaction in transaction_list:
             # create transaction node
             query = "CREATE (t:" + self.transaction_label + " {" \
-                    + "timestamp:'" + transaction.timestamp \
+                    + "code:'" + transaction.code \
+                    + "',timestamp:'" + transaction.timestamp \
                     + "', context:'" + transaction.context \
-                    + "', message: '" + transaction.message + "'}) " \
-                    + "RETURN Id(t)"
+                    + "', message: '" + transaction.message + "'})"
             self.neo4j_create_transactions_query = self.neo4j_create_transactions_query + "\n" + query + ";"
             query_result = self.execute_query(query)
-            transaction_id = str([x["Id(t)"] for x in query_result][0])
             # create transaction relation between instances
             query = "MATCH(a:" + self.instance_label + "), (b:" + self.instance_label + ")," \
                     "(t:" + self.transaction_label + ") " \
                     + "WHERE a.code = '" + transaction.source + "' AND b.code='" + transaction.destination + "' " \
-                    + "AND ID(t) = " + transaction_id + " " \
+                    + "AND t.code = '" + transaction.code + "' " \
                     + "CREATE UNIQUE (a) - [r1:" + self.relation_transaction_label + "]->(t) " \
                     + "CREATE UNIQUE (t) - [r2:" + self.relation_transaction_label + "]->(b) " \
                     + "RETURN r1,r2"
@@ -131,6 +131,12 @@ class Neo4JManager:
     def neo4j_change_community_of_node(self, node_code, new_community):
         query = "MATCH(n:Instance) " \
                 + "WHERE n.code = '" + node_code + "' " \
-                + "SET n.community = '" + new_community + "' "
+                + "SET n.community = '" + new_community + "'"
         self.neo4j_adjust_communities_query = self.neo4j_adjust_communities_query + "\n" + query + ";"
+        self.execute_query(query)
+
+    def neo4j_delete_isolated_nodes(self):
+        query = "MATCH(n:Instance) WHERE not (n)-[:"\
+                + self.relation_between_instances_label + "]-() DETACH DELETE  n"
+        self.neo4j_delete_isolated_nodes_query = query + ";"
         self.execute_query(query)

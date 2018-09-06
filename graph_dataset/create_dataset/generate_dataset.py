@@ -127,7 +127,8 @@ def create_transactions(list_instances, con):
             # choose message from context
             message, timestamp = choose_message_from_context(new_context)
             # create transaction/8
-            new_transaction = Transaction.Transaction(instance_start.code, instance_end, timestamp, new_context, message)
+            new_transaction = Transaction.Transaction(i, instance_start.code,
+                                                      instance_end, timestamp, new_context, message)
             transactions_list.append(new_transaction)
             i += 1
     return transactions_list
@@ -217,16 +218,21 @@ def adjust_communities():
                 neoManager.neo4j_change_community_of_node(node, new_community)
 
 
+def delete_isolated_nodes():
+    neoManager.neo4j_delete_isolated_nodes()
+
+
 if __name__ == "__main__":
     # read data useful to create nodes
     utilities.print_date()
     print "Read and prepare to create dataset"
     readFile = ReadFile.ReadFile()
     neoManager = Neo4JManager.Neo4JManager()
-    # context = prepare_environment()
-    # objects, instances = prepare_nodes()
-    # prepare_nodes_connections(objects)
-    # prepare_transactions(instances, context)
+    context = prepare_environment()
+    objects, instances = prepare_nodes()
+    prepare_nodes_connections(objects)
+    delete_isolated_nodes()
     adjust_communities()
+    prepare_transactions(instances, context)
     print_neo4j_queries()
     utilities.print_date()

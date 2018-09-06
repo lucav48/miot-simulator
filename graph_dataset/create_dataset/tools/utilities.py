@@ -113,6 +113,10 @@ def write_to_file(neoManager):
     output_file.write(":begin\n")
     output_file.write(neoManager.neo4j_adjust_communities_query.encode('utf-8'))
     output_file.write("\n:commit\n")
+    # adjust communities transactions
+    output_file.write(":begin\n")
+    output_file.write(neoManager.neo4j_delete_isolated_nodes_query.encode('utf-8'))
+    output_file.write("\n:commit\n")
     output_file.close()
 
 
