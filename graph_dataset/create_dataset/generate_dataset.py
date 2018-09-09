@@ -1,6 +1,6 @@
 from graph_dataset.create_dataset.tools import utilities, ReadFile, write_file
 from graph_dataset.create_dataset.neo4JHandler import Neo4JManager
-from graph_dataset.create_dataset.neo4JHandler.neo4JObject import Objects, Instance, Transaction
+from graph_dataset.create_dataset.neo4JHandler.neo4JObject import Object, Instance, Transaction
 from threading import Thread
 import settings
 import random
@@ -19,7 +19,7 @@ def create_objects():
         tec = choose_technical_given_descriptive(des[0])
         code = str(i)
         num_instances, list_instances = get_num_instances(list_instances)
-        new_node = Objects.Objects(des, tec, code, [], num_instances)
+        new_node = Object.Object(des, tec, code, [], num_instances)
         list_objects.append(new_node)
         i += 1
     return list_objects

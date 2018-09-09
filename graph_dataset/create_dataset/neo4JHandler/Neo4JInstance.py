@@ -9,3 +9,6 @@ class Neo4JInstance:
                                             auth=basic_auth(credentials.NEO4J_USERNAME,
                                                             credentials.NEO4J_PASSWORD))
         self.session = self._driver.session()
+
+    def execute_query(self, query):
+        return self.session.run(query)

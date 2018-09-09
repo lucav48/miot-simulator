@@ -1,4 +1,3 @@
-import graph_dataset.create_dataset.tools.utilities as utilities
 import graph_dataset.create_dataset.settings as settings
 from Neo4JInstance import Neo4JInstance
 
@@ -28,10 +27,7 @@ class Neo4JManager(Neo4JInstance):
     def neo4j_create_objects(self, list_object):
         # + "', travel:' " + node.travel_path \
         for one_object in list_object:
-            query = "CREATE (n:" + self.object_label + " {" \
-                    + "descriptive:'" + utilities.list_to_string(one_object.descriptive) \
-                    + "', technical:'" + utilities.list_to_string(one_object.technical) \
-                    + "', code:'" + one_object.code + "'})"
+            query = "CREATE (n:" + self.object_label + " {" + one_object.object_as_string() + "})"
             self.neo4j_create_nodes_query = self.neo4j_create_nodes_query + "\n" + query + ";"
             self.execute_query(query)
 
@@ -59,13 +55,9 @@ class Neo4JManager(Neo4JInstance):
     def neo4j_add_transactions(self, transaction_list):
         for transaction in transaction_list:
             # create transaction node
-            query = "CREATE (t:" + self.transaction_label + " {" \
-                    + "code:'" + transaction.code \
-                    + "',timestamp:'" + transaction.timestamp \
-                    + "', context:'" + transaction.context \
-                    + "', message: '" + transaction.message + "'})"
+            query = "CREATE (t:" + self.transaction_label + " {" + transaction.transaction_as_string() + "})"
             self.neo4j_create_transactions_query = self.neo4j_create_transactions_query + "\n" + query + ";"
-            query_result = self.execute_query(query)
+            self.execute_query(query)
             # create transaction relation between instances
             query = "MATCH(a:" + self.instance_label + "), (b:" + self.instance_label + ")," \
                     "(t:" + self.transaction_label + ") " \
@@ -88,16 +80,12 @@ class Neo4JManager(Neo4JInstance):
             result.append(x["b.code"])
         return result
 
-    def execute_query(self, query):
-        return self.session.run(query)
-
     def neo4j_create_objects_instances(self, objects):
         for one_object in objects:
             for instance in one_object.instances:
                 query = "MATCH(n:" + self.object_label + ") " \
                         + "WHERE n.code = '" + one_object.code + "' " \
-                        + "CREATE (i:" + self.instance_label + " {code:'" + instance.code + "'," \
-                                                                "community:'" + instance.community + "'}) " \
+                        + "CREATE (i:" + self.instance_label + " {" + instance.instance_as_string() + "}) " \
                         + "CREATE UNIQUE (n) - [r:" + self.relation_object_instance_label + "]->(i) " \
                         + "RETURN r"
                 self.neo4j_create_instances_query = self.neo4j_create_instances_query + "\n" + query + ";"

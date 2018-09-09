@@ -6,3 +6,11 @@ class Transaction:
         self.timestamp = dt
         self.context = con
         self.message = mes
+
+    def transaction_as_string(self):
+        return "code:'" + self.code \
+                + "',timestamp:'" + self.timestamp \
+                + "',source:'" + self.source \
+                + "',destination:'" + self.destination \
+                + "', context:'" + self.context \
+                + "', message: '" + self.message + "'"
