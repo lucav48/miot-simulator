@@ -81,7 +81,7 @@ def collaborative_filtering_analysis(profiles_instances):
             p_collaborative_instances[node][prop] = {}
             for single_instance in neighborhoods[node]:
                 if p_collaborative_instances[node][prop]:
-                    p_collaborative_instances[node][prop] = utilities.sum_profiles(
+                    p_collaborative_instances[node][prop] = utilities.sum_occurrences_dict(
                         p_collaborative_instances[node][prop],
                         profiles_instances[single_instance.code][prop])
                 else:
@@ -97,9 +97,9 @@ def merge_profiles(content_based, collaborative_filtering):
         merged_profiles[node] = {}
         for characteristic in content_based[node]:
             if node in collaborative_filtering:
-                merged_profiles[node][characteristic] = utilities.sum_profiles(content_based[node][characteristic],
-                                                                               collaborative_filtering[node][characteristic]
-                                                                               )
+                merged_profiles[node][characteristic] = utilities.sum_occurrences_dict(content_based[node][characteristic],
+                                                                                       collaborative_filtering[node][characteristic]
+                                                                                       )
             else:
                 # if node doesn't have a collaborative filtering profile, I have to add to that node only
                 # the content based one.
@@ -120,6 +120,6 @@ if __name__ == "__main__":
                                                p_collaborative_single_instance)
     p_overall_single_object = get_profile_single_object(p_overall_single_instance, neo.get_all_objects())
     if settings.SUPERVISED_APPROACH:
-        supervised_approach.start()
+        supervised_approach.start(p_content_single_instance)
     else:
         unsupervised_approach.start()
