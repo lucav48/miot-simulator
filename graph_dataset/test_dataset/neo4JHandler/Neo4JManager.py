@@ -10,7 +10,7 @@ class Neo4JManager(Neo4JInstance):
         Neo4JInstance.__init__(self)
 
     def get_transactions(self):
-        query = "MATCH(n:Instance)-[:HAS_TRANSACTION]->(t:Transaction)-[:HAS_TRANSACTION]->(n2:Instance)"\
+        query = "MATCH(n:Instance)-[:HAS_TRANSACTION]->(t:Transaction)-[:HAS_TRANSACTION]->(n2:Instance)" \
                 + "RETURN n.code as node1, collect(t) as transactions, n2.code as node2 ORDER BY node1"
         query_result = self.execute_query(query)
         transactions = {}
@@ -66,3 +66,26 @@ class Neo4JManager(Neo4JInstance):
                 local_neighborhood.append(Instance.Instance(path="", code=i, num_community=""))
             instances[node["code"]] = local_neighborhood
         return instances
+
+    def check_community_connected_nodes(self, node1, node2):
+        query = "MATCH(n1:Instance)-[r:LINKED]-(n2:Instance)" \
+                "WHERE n1.code='" + node1 + "' AND n2.code='" + node2 + "' " \
+                "RETURN r as relation, n1.community as community1, n2.community as community2"
+        query_result = self.execute_query(query)
+        comm1 = -1
+        comm2 = -1
+        for result in query_result:
+            comm1 = result["community1"]
+            comm2 = result["community2"]
+        return comm1, comm2
+
+    def get_communities_neighborhood(self, code):
+        query = "MATCH(n:Instance)-[:LINKED]-(n2:Instance) "\
+                "WHERE n.code='" + code + "' " \
+                "RETURN n2.code as code, " \
+                    "CASE WHEN n.community = n2.community THEN True ELSE False END as result"
+        query_result = self.execute_query(query)
+        results = {}
+        for res in query_result:
+            results[res["code"]] = res["result"]
+        return results
