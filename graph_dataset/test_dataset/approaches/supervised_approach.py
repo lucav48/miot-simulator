@@ -10,8 +10,10 @@ def start(profiles, neo):
     ci = build_ci(profiles.p_content_single_instance, q_first)
     ri = build_ri(ci, q_first)
     refactor_ri, ri_connections = build_connections(ri, neo)
-    build_graph_networkx(refactor_ri, ri_connections)
-    print "There are ", len(ri), " compatible to user's query."
+    print "There are ", len(refactor_ri), " compatible to user's query."
+    print "-" * 100
+    graph = build_graph_networkx(refactor_ri, ri_connections)
+    return graph
 
 
 def build_connections(nodes, neo):
@@ -60,6 +62,12 @@ def fuse_node(nodes, f_nodes, conn):
             del nodes[node_to_fuse]
         del nodes[node]
         nodes[new_node] = new_profile
+    # print number of nodes fused
+    print "-" * 100
+    cont = len(fusing_nodes_complete)
+    for node in fusing_nodes_complete:
+        cont += len(fusing_nodes_complete[node])
+    print "Number of c-nodes fused: ", cont
     return nodes, conn
 
 
@@ -92,6 +100,7 @@ def build_graph_networkx(nodes, connections):
         graph.add_edge(links[0], links[1], cross_node="")
     graph = check_if_graph_connected(graph)
     print_graph(graph)
+    return graph
 
 
 def check_if_graph_connected(graph):
@@ -110,6 +119,7 @@ def print_graph(graph):
     nx.draw(graph, pos, with_labels=True)
     edge_labels = nx.get_edge_attributes(graph, 'cross_node')
     nx.draw_networkx_edge_labels(graph, pos, edge_labels=edge_labels, font_color='red')
+    print "Thematic view has: ", graph.number_of_nodes(), " nodes and ", graph.number_of_edges(), " edges."
     plt.show()
 
 

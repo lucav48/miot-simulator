@@ -1,5 +1,8 @@
 from graph_dataset.test_dataset import settings as settings
 import random
+import time
+import datetime
+
 
 def u_plus_operator(items):
     counting_list = {}
@@ -16,7 +19,7 @@ def sum_occurrences_dict(list1, list2):
     for key in list1:
         results[key] = list1[key]
         if key in list2:
-            results[key] += list2[key]
+            results[key] = int(list1[key]) + int(list2[key])
     for key in list2:
         if key not in results:
             results[key] = list2[key]
@@ -61,7 +64,6 @@ def subset(list1, list2):
 
 
 def add_edges(g):
-    num_nodes = len(g.nodes)
     no_comp = 0
     comp = {}
     vis = {}
@@ -88,8 +90,6 @@ def add_edges(g):
         if vis[i] == 0:
             dfs(i, vis, comp, no_comp, size_comp, g.nodes, edges)
             no_comp += 1
-
-    print "n. New edges: ", no_comp-1, " n. Nodes: ", str(num_nodes), " n. Old edges: ", str(len(g.edges))
     for key1 in comp:
         for key2 in comp[key1]:
             if comp[key1][key2] != 0:
@@ -114,3 +114,21 @@ def add_edges_isolated_nodes(g, nx):
         other_node = random.choice(not_isolated)
         g.add_edge(isolated, other_node, cross_node="X")
     return g
+
+
+def has_partial_key(keys, partial_key):
+    result_key = None
+    for composite_key in keys:
+        key_list = composite_key.split("+")
+        if partial_key in key_list:
+            result_key = composite_key
+    return result_key
+
+
+def find_over_connection(list1, composite_key):
+    keys = composite_key.split("+")
+    connection = []
+    for key in keys:
+        if key in list1:
+            connection.append(key)
+    return connection

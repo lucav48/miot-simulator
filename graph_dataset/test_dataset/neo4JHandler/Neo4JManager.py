@@ -89,3 +89,54 @@ class Neo4JManager(Neo4JInstance):
         for res in query_result:
             results[res["code"]] = res["result"]
         return results
+
+    def get_instances_to_merge_unsupervised(self):
+        query = "MATCH(o:Object)-[:HAS_INSTANCE]->(n:Instance), "\
+                "(o)-[:HAS_INSTANCE]->(n2:Instance) " \
+                "WHERE n.community<> n2.community "\
+                "RETURN n.code as node, collect(n2.code) as connected"
+        query_result = self.execute_query(query)
+        instances_list = {}
+        for row in query_result:
+            index = row["node"]
+            instances_list[index] = []
+            for n in row["connected"]:
+                instances_list[index].append(n)
+
+        return instances_list
+
+    def get_instances_connections(self):
+        query = "MATCH(n:Instance)-[:LINKED]->(n2:Instance) " \
+                "RETURN n.code as node, collect(n2.code) as connections"
+        query_result = self.execute_query(query)
+        connections = {}
+        for row in query_result:
+            connections[row["node"]] = row["connections"]
+        return connections
+
+    def get_network_values(self):
+        # number of nodes
+        query = "MATCH(n:Instance) RETURN COUNT(n) as nodes"
+        query_result = self.execute_query(query)
+        n_nodes = 0
+        for row in query_result:
+            n_nodes = row["nodes"]
+        # number of transactions
+        query = "MATCH(t:Transaction) RETURN COUNT(t) as transactions"
+        query_result = self.execute_query(query)
+        n_transactions = 0
+        for row in query_result:
+            n_transactions = row["transactions"]
+        # number of relationships
+        query = "MATCH(n:Instance)-[r:LINKED]->(n2:Instance) RETURN COUNT(r) as relationships"
+        query_result = self.execute_query(query)
+        n_relationships = 0
+        for row in query_result:
+            n_relationships = row["relationships"]
+        # average number of neighborhood
+        query = "MATCH(n:Instance)-[r:LINKED]->(n2:Instance) WITH n, count(n2) as nodes return avg(nodes) as average"
+        query_result = self.execute_query(query)
+        avg_neighborhood = 0
+        for row in query_result:
+            avg_neighborhood = round(row["average"], 2)
+        return n_nodes, n_transactions, n_relationships, avg_neighborhood
