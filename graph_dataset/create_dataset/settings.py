@@ -1,15 +1,18 @@
 # settings of dataset to create
-NUMBER_OF_NODES = 30
-LIMIT_METER_CONNECTION = 10
+LIMIT_METER_CONNECTION = 5
 NUMBER_OF_TRANSACTIONS = 100
 PROBABILITY_TO_CHOOSE_FROM_CONTEXT_ALREADY_USED = 0.7
 NUMBER_OF_CONTENT_MESSAGES_TO_READ = 10
 # it could be random between [min,max] or a number
-NUMBER_OF_INSTANCES = [320, 56, 24]
+# put instances you want in right place of list!
+# Example: [4, 5, 6] will create for 4 object with 1 instance, 5 object with 2 instances and 6 objects with 3 instances
+NUMBER_OF_INSTANCES = [100, 800, 100]
+NUMBER_OF_OBJECTS = sum(NUMBER_OF_INSTANCES)
 NUMBER_OF_COMMUNITIES = 11
-CHECK_EVERY_POINT = True
+ADJUST_COMMUNITIES = 1
+DELETE_ISOLATED_NODES = 1
 # execution settings
-NUMBER_OF_THREAD = 4
+NUMBER_OF_THREAD = 1
 
 # folder structure
 METADATA_FOLDER = "metadata"
@@ -18,6 +21,7 @@ DESCRIPTIVE_CSV = METADATA_FOLDER + "/" + "descriptive_metadata.csv"
 TECHNICAL_CSV = METADATA_FOLDER + "/" + "technical_metadata.csv"
 BEHAVIORAL_CSV = METADATA_FOLDER + "/" + "Posts.xml"
 TRAVEL_CSV = METADATA_FOLDER + "/" + "travel_metadata.csv"
+TRAVEL_JSON = METADATA_FOLDER + "/" + "travel_distances.txt"
 CONTEXT_FOLDER = METADATA_FOLDER + "/" + "context"
 SUFFIX_CONTEXT_FILE = "Posts.xml"
 PREFIX_DATASET_FILE = CREATED_DATASET_FOLDER + "/" + "network-"

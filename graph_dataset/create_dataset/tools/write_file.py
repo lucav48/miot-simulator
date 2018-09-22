@@ -8,26 +8,31 @@ def write_to_file(neoManager):
 
     # add objects
     output_file.write(":begin\n")
-    output_file.write(neoManager.neo4j_create_nodes_query.encode('utf-8'))
+    print_list(output_file, neoManager.neo4j_create_nodes_query)
     output_file.write("\n:commit\n")
     # add objects
     output_file.write(":begin\n")
-    output_file.write(neoManager.neo4j_create_instances_query.encode('utf-8'))
+    print_list(output_file, neoManager.neo4j_create_instances_query)
     output_file.write("\n:commit\n")
     # add relationships
     output_file.write(":begin\n")
-    output_file.write(neoManager.neo4j_create_connections_query.encode('utf-8'))
+    print_list(output_file, neoManager.neo4j_create_connections_query)
     output_file.write("\n:commit\n")
     # add transactions
     output_file.write(":begin\n")
-    output_file.write(neoManager.neo4j_create_transactions_query.encode('utf-8'))
+    print_list(output_file, neoManager.neo4j_create_transactions_query)
     output_file.write("\n:commit\n")
     # adjust communities transactions
     output_file.write(":begin\n")
-    output_file.write(neoManager.neo4j_adjust_communities_query.encode('utf-8'))
+    output_file.write(neoManager.neo4j_adjust_communities_query)
     output_file.write("\n:commit\n")
     # adjust communities transactions
     output_file.write(":begin\n")
-    output_file.write(neoManager.neo4j_delete_isolated_nodes_query.encode('utf-8'))
+    output_file.write(neoManager.neo4j_delete_isolated_nodes_query)
     output_file.write("\n:commit\n")
     output_file.close()
+
+
+def print_list(output_file, list_to_print):
+    for element in list_to_print:
+        output_file.write("\n" + element.encode('utf-8') + ";")
