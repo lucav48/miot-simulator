@@ -52,7 +52,10 @@ def jaccard_star(topicset1, topicset2):
     common_ts = intersect_dict(topicset1, topicset2)
     num = sum_occurrences(common_ts)
     den = (sum_occurrences(topicset1) + sum_occurrences(topicset2))
-    tot = num / den
+    if den == 0:
+        tot = 0
+    else:
+        tot = num / den
     return tot
 
 

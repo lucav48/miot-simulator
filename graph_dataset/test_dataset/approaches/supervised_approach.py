@@ -4,7 +4,7 @@ import networkx as nx
 import matplotlib.pyplot as plt
 
 
-def start(profiles, neo):
+def start(profiles, neo, performance):
     print("Supervised approach started!")
     q_first = utilities.define_q_first()
     ci = build_ci(profiles.p_content_single_instance, q_first)
@@ -12,7 +12,11 @@ def start(profiles, neo):
     refactor_ri, ri_connections = build_connections(ri, neo)
     print "There are ", len(refactor_ri), " compatible to user's query."
     print "-" * 100
+    performance.get_end_time()
     graph = build_graph_networkx(refactor_ri, ri_connections)
+    performance.get_graph_parameters(graph)
+    performance.get_end_time()
+    print_graph(graph)
     return graph
 
 
@@ -99,7 +103,6 @@ def build_graph_networkx(nodes, connections):
         links = connection.split("-")
         graph.add_edge(links[0], links[1], cross_node="")
     graph = check_if_graph_connected(graph)
-    print_graph(graph)
     return graph
 
 

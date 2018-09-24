@@ -62,13 +62,13 @@ class Neo4JManager(Neo4JInstance):
 
     def neo4j_delete_isolated_nodes(self):
         query = "MATCH(n:Instance) WHERE not (n)-[:"\
-                + self.relation_between_instances_label + "]-() DETACH DELETE  n"
+                + self.relation_between_instances_label + "]-() DETACH DELETE  n;"
         self.neo4j_delete_isolated_nodes_query = query
 
     def adjust_communities(self):
         list_communities = [x for x in range(1, settings.NUMBER_OF_COMMUNITIES + 1)]
-        query = "UNWIND " + utilities.list_to_string(list_communities, ",") + " AS comm "\
-                "WITH comm"\
+        query = "UNWIND [" + utilities.list_to_string(list_communities, ",") + "] AS comm "\
+                "WITH comm "\
                 "MATCH(n:Instance) WHERE n.community = comm "\
                 "WITH n, comm " \
                 "OPTIONAL MATCH (n)-[r:LINKED]-(n2:Instance) WHERE n2.community = comm "\
@@ -82,6 +82,6 @@ class Neo4JManager(Neo4JInstance):
                 "UNWIND biglistone as element "\
                 "WITH single_node,MAX(element.value) as result, biglistone "\
                 "WITH single_node, result, filter(element in biglistone WHERE element.value = result) as the_one "\
-                "MATCH(n:Instance) WHERE n.code = single_node SET n.community = the_one[0].community "
+                "MATCH(n:Instance) WHERE n.code = single_node SET n.community = the_one[0].community;"
         self.neo4j_adjust_communities_query = query
 

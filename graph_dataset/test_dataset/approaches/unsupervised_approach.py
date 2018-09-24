@@ -4,7 +4,7 @@ import networkx as nx
 import matplotlib.pyplot as plt
 
 
-def start(profiles, neo):
+def start(profiles, neo, performance):
     print("Unsupervised approach started!")
     instances_to_merge = neo.get_instances_to_merge_unsupervised()
     unsupervised_instances, instances_merged = merge_instances(instances_to_merge,
@@ -13,6 +13,8 @@ def start(profiles, neo):
     merged_connections = merge_connections(connections, unsupervised_instances)
     fill_unsupervised_instances(unsupervised_instances, instances_merged, profiles.p_content_single_instance)
     graph = build_graph(unsupervised_instances, merged_connections, profiles.p_content_single_instance)
+    performance.get_graph_parameters(graph)
+    performance.get_end_time()
     print_graph(graph)
     return graph
 
@@ -67,10 +69,11 @@ def merge_connections(connections, unsupervised_instances):
         all_nodes = node.split("+")
         new_connections = []
         for n in all_nodes:
-            for conn in connections[n]:
-                if conn not in new_connections:
-                    new_connections.append(conn)
-            del connections[n]
+            if n in connections:
+                for conn in connections[n]:
+                    if conn not in new_connections:
+                        new_connections.append(conn)
+                del connections[n]
         merged_connections[node] = new_connections
     for node in connections:
         merged_connections[node] = {}
@@ -82,18 +85,24 @@ def merge_instances(instances_to_merge, p_single_instance):
     merged_instances = {}
     instances = []
     for in_to_merge in instances_to_merge:
-        new_code = in_to_merge
-        new_profile = {}
-        for related_instance in instances_to_merge[in_to_merge]:
-            if related_instance not in instances:
-                new_code = new_code + "+" + related_instance
-                for prop in settings.PROPERTY_TRANSACTION_TO_WATCH:
-                    if prop not in new_profile:
-                        new_profile[prop] = {}
-                    new_profile[prop] = utilities.sum_occurrences_dict(new_profile[prop],
-                                                                       p_single_instance[related_instance][prop])
-                instances.append(related_instance)
+        if in_to_merge == "56:2":
+            print "debug"
         if in_to_merge not in instances:
+            new_code = in_to_merge
+            new_profile = p_single_instance[in_to_merge].copy()
+            for related_instance in instances_to_merge[in_to_merge]:
+                search_code = [x for x in merged_instances.keys() if related_instance in x.split("+")]
+                if not search_code:
+                    new_code = new_code + "+" + related_instance
+                    profile_to_fuse = p_single_instance[related_instance].copy()
+                else:
+                    new_code = new_code + "+" + search_code[0]
+                    profile_to_fuse = merged_instances[search_code[0]].copy()
+                    del merged_instances[search_code[0]]
+                for prop in settings.PROPERTY_TRANSACTION_TO_WATCH:
+                    new_profile[prop] = utilities.sum_occurrences_dict(new_profile[prop],
+                                                                       profile_to_fuse[prop])
+                instances.append(related_instance)
             instances.append(in_to_merge)
             merged_instances[new_code] = new_profile
     return merged_instances, instances

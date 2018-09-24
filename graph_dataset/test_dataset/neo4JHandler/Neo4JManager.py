@@ -106,7 +106,7 @@ class Neo4JManager(Neo4JInstance):
         return instances_list
 
     def get_instances_connections(self):
-        query = "MATCH(n:Instance)-[:LINKED]->(n2:Instance) " \
+        query = "MATCH(n:Instance)-[r:LINKED]-(n2:Instance) " \
                 "RETURN n.code as node, collect(n2.code) as connections"
         query_result = self.execute_query(query)
         connections = {}

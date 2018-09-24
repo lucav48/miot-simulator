@@ -34,5 +34,10 @@ def write_to_file(neoManager):
 
 
 def print_list(output_file, list_to_print):
+    limit_rows = 100000
+    if len(list_to_print) > limit_rows:
+        times = len(list_to_print) / limit_rows
+        for i in range(0, times):
+            list_to_print.insert(limit_rows * (i+1), ":commit\n :begin")
     for element in list_to_print:
         output_file.write("\n" + element.encode('utf-8') + ";")

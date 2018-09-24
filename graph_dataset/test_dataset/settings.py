@@ -1,5 +1,5 @@
 # script execution settings
-SUPERVISED_APPROACH = 1
+SUPERVISED_APPROACH = 0
 PROPERTY_TRANSACTION_TO_WATCH = ['context', 'source', 'destination']
 TRANSACTION_CONTEXT_FIELD = "context"
 # supervised settings

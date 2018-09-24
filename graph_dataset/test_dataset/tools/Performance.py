@@ -1,5 +1,8 @@
 import time
 import datetime
+import networkx as nx
+from networkx.algorithms.community import kernighan_lin_bisection
+from networkx.algorithms import community
 
 
 class Performance:
@@ -20,9 +23,17 @@ class Performance:
         print "Average neighborhood: ", avg_neighborhood
         print "-" * 100
 
-    def get_coefficient_graph(self, graph):
-        # TODO
-        print ""
+    def get_graph_parameters(self, graph):
+        print "-" * 100
+        print "Community algorithms"
+        print "Label propagation: ", list(community.label_propagation_communities(graph))
+        print "K-Clique: ", list(community.k_clique_communities(graph, 3))
+        print "Connectivity algorithms"
+        k_edge = 3
+        print "K-edge (k=" + str(k_edge) + "): ", sorted(map(sorted, nx.k_edge_components(graph, k=k_edge)))
+        print "K-components: ", nx.k_components(graph)
+        print "-" * 100
+
 
     def get_start_time(self):
         self.start_time = time.strftime("%H:%M:%S")
@@ -33,6 +44,7 @@ class Performance:
         diff_time = self.difference_time(self.start_time, self.end_time)
         print "Lasted ", diff_time
         print "Script ended at ", self.end_time
+        print "-" * 100
 
     def difference_time(self, start, end):
         start_dt = datetime.datetime.strptime(start, '%H:%M:%S')
