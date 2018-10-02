@@ -124,7 +124,8 @@ def print_graph(graph):
     nx.draw(graph, pos, with_labels=True)
     edge_labels = nx.get_edge_attributes(graph, 'cross_node')
     nx.draw_networkx_edge_labels(graph, pos, edge_labels=edge_labels, font_color='red')
-    plt.show()
+    if graph.nodes:
+        plt.show()
 
 
 def build_ri(ci, q_first):

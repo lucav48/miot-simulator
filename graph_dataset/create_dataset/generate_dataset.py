@@ -123,7 +123,7 @@ def choose_transaction_context(instance_start, instance_end, all_context):
         all_context[content_result] = sign
     # if this isn't first transaction
     else:
-        probability = random.randint(0, 1)
+        probability = random.random()
         if probability < settings.PROBABILITY_TO_CHOOSE_FROM_CONTEXT_ALREADY_USED:
             content_result = random.choice(talked_about)
         else:

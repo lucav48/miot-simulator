@@ -78,12 +78,23 @@ class BuildProfiles:
 
     def content_based_analysis(self):
         transactions = self.neo4j_instance.get_transactions()
-        profile_content_couples_instances = self.get_profile_couples_instances(transactions)
+        fused_transactions = self.fuse_transactions(transactions)
+        profile_content_couples_instances = self.get_profile_couples_instances(fused_transactions)
         instances = self.neo4j_instance.get_all_instances()
         profile_content_single_instance = self.get_profile_single_instance(profile_content_couples_instances, instances)
         objects = self.neo4j_instance.get_all_objects()
         profile_content_single_object = self.get_profile_single_object(profile_content_single_instance, objects)
         return profile_content_single_instance, profile_content_single_object
+
+    def fuse_transactions(self, transactions):
+        fused_transactions = transactions.copy()
+        for couple in transactions:
+            instance_start, instance_end = couple.split("-")
+            reverse_couple = instance_end + "-" + instance_start
+            if reverse_couple in transactions:
+                fused_transactions[couple] = transactions[couple] + transactions[reverse_couple]
+                del fused_transactions[reverse_couple]
+        return fused_transactions
 
     def collaborative_filtering_analysis(self, profiles_instances):
         neighborhoods = self.neo4j_instance.get_neighborhoods()
