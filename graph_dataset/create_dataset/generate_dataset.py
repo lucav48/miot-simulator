@@ -108,11 +108,13 @@ def get_all_context():
     return list_context
 
 
-def choose_transaction_context(sign, all_context):
+def choose_transaction_context(instance_start, instance_end, all_context):
     # look for context already used by those nodes
     talked_about = []
+    sign = instance_start + "-" + instance_end
+    reverse_sign = instance_end + "-" + instance_start
     for key, value in all_context.items():
-        if sign in value:
+        if sign in value or reverse_sign in value:
             talked_about.append(key)
 
     # if this is first transaction
@@ -140,9 +142,8 @@ def create_transactions(list_instances, list_connections, context_list):
         instance_connected = get_instance_connected(instance_start, list_connections)
         # check if node is isolated
         if instance_connected:
-            sign = instance_start + "-" + instance_connected
             # choose context
-            new_context = choose_transaction_context(sign, context_list)
+            new_context = choose_transaction_context(instance_start, instance_connected, context_list)
             # choose message from context
             message, timestamp = choose_message_from_context(new_context)
             # create transaction/8

@@ -1,8 +1,6 @@
 import time
 import datetime
 import networkx as nx
-from networkx.algorithms.community import kernighan_lin_bisection
-from networkx.algorithms import community
 
 
 class Performance:
@@ -16,24 +14,31 @@ class Performance:
         self.neo = neo4j
 
     def get_network_characteristic(self):
-        nodes, transactions, n_relation, avg_neighborhood = self.neo.get_network_values()
+        nodes, transactions, n_relation, avg_neighborhood, triangle_count, \
+        avg_cluster_cofficient, list_cluster_coefficients = self.neo.get_network_values()
         print "-" * 100
         print "Network Characteristics"
         print "Nodes: ", nodes, ". Relationships among instances: ", n_relation, ". Transactions: ", transactions
-        print "Average neighborhood: ", avg_neighborhood
+        print "Average neighborhood: ", avg_neighborhood, " Average transactions per nodes: ", round(float(transactions)/nodes, 3)
+        print "Triangle count: ", triangle_count, " Avg. cluster coefficient: ", avg_cluster_cofficient
+        print "Cluster coefficient for communities: ", list_cluster_coefficients
         print "-" * 100
 
     def get_graph_parameters(self, graph):
         print "-" * 100
-        print "Community algorithms"
-        print "Label propagation: ", list(community.label_propagation_communities(graph))
-        print "K-Clique: ", list(community.k_clique_communities(graph, 3))
-        print "Connectivity algorithms"
-        k_edge = 3
-        print "K-edge (k=" + str(k_edge) + "): ", sorted(map(sorted, nx.k_edge_components(graph, k=k_edge)))
-        print "K-components: ", nx.k_components(graph)
+        if graph.edges:
+            print "Community algorithms"
+            print "Average clustering coefficient: ", nx.average_clustering(graph)
+            print "Triangles count: ", sum(list(nx.triangles(graph).values()))
+            # print "Label propagation: ", list(community.label_propagation_communities(graph))
+            # print "K-Clique: ", list(community.k_clique_communities(graph, 3))
+            # print "Connectivity algorithms"
+            # k_edge = 3
+            # print "K-edge (k=" + str(k_edge) + "): ", sorted(map(sorted, nx.k_edge_components(graph, k=k_edge)))
+            # print "K-components: ", nx.k_components(graph)
+        else:
+            print "No connections in graph, I can't apply algorithms to it."
         print "-" * 100
-
 
     def get_start_time(self):
         self.start_time = time.strftime("%H:%M:%S")

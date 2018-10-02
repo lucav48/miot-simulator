@@ -23,7 +23,8 @@ class Neo4JManager(Neo4JInstance):
         self.relation_object_instance_label = settings.NEO4J_RELATION_OBJECT_INSTANCE_TYPE
         self.relation_transaction_label = settings.NEO4J_RELATION_TRANSACTION_TYPE
         # clear all previously nodes and relationship
-        self.execute_query(settings.NEO4J_DELETE_NODES)
+        if settings.CLEAR_ALL_NEO4J:
+            self.execute_query(settings.NEO4J_DELETE_NODES)
 
     def neo4j_create_objects(self, list_object):
         # + "', travel:' " + node.travel_path \

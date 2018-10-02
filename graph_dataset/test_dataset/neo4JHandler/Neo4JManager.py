@@ -2,6 +2,7 @@ from graph_dataset.create_dataset.neo4JHandler.Neo4JInstance import Neo4JInstanc
 from graph_dataset.create_dataset.neo4JHandler.neo4JObject import Transaction
 from graph_dataset.create_dataset.neo4JHandler.neo4JObject import Instance
 from graph_dataset.create_dataset.neo4JHandler.neo4JObject import Object
+from graph_dataset.create_dataset import settings as create_settings
 
 
 class Neo4JManager(Neo4JInstance):
@@ -139,4 +140,34 @@ class Neo4JManager(Neo4JInstance):
         avg_neighborhood = 0
         for row in query_result:
             avg_neighborhood = round(row["average"], 2)
-        return n_nodes, n_transactions, n_relationships, avg_neighborhood
+        triangle_count, avg_cluster_coefficient = self.get_clustering_coefficient()
+        list_cluster_coefficients = self.get_cluster_cofficients_of_each_community()
+        return n_nodes, n_transactions, n_relationships, avg_neighborhood, triangle_count, \
+            avg_cluster_coefficient, list_cluster_coefficients
+
+    def get_cluster_cofficients_of_each_community(self):
+        community_list = list(range(1, create_settings.NUMBER_OF_COMMUNITIES + 1))
+        result_as_string = ""
+        for community in community_list:
+            result_as_string += str(community) + ": "
+            query = "CALL algo.triangleCount('MATCH(n:Instance) WHERE n.community=\"" + str(community) + "\" " +\
+                    " RETURN id(n) as id','MATCH(n1:Instance)-[:LINKED]-(n2:Instance) WHERE n1.community=\"" + str(community) + "\" "\
+                    " AND n2.community=\"" + str(community) + "\" " +\
+                    " RETURN id(n1) as source, id(n2) as target',{concurrency:4, graph:'cypher'})" \
+                    " YIELD nodeCount, triangleCount, averageClusteringCoefficient"
+            query_result = self.execute_query(query)
+            for result in query_result:
+                result_as_string += str(round(result["averageClusteringCoefficient"], 3)) + "   "
+        return result_as_string
+
+    def get_clustering_coefficient(self):
+        query = "CALL algo.triangleCount('Instance','LINKED', "\
+                "{concurrency:4}) "\
+                "YIELD triangleCount, averageClusteringCoefficient"
+        query_result = self.execute_query(query)
+        triangle_count = 0
+        avg_cluster_coefficient = 0
+        for result in query_result:
+            triangle_count = result["triangleCount"]
+            avg_cluster_coefficient = result["averageClusteringCoefficient"]
+        return triangle_count, avg_cluster_coefficient

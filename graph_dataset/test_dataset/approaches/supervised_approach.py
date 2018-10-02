@@ -11,9 +11,8 @@ def start(profiles, neo, performance):
     ri = build_ri(ci, q_first)
     refactor_ri, ri_connections = build_connections(ri, neo)
     print "There are ", len(refactor_ri), " compatible to user's query."
-    print "-" * 100
-    performance.get_end_time()
     graph = build_graph_networkx(refactor_ri, ri_connections)
+    print "Thematic view has: ", graph.number_of_nodes(), " nodes and ", graph.number_of_edges(), " edges."
     performance.get_graph_parameters(graph)
     performance.get_end_time()
     print_graph(graph)
@@ -81,7 +80,7 @@ def update_connections(conn, node1, node2):
         fused = node1 + "+" + node2
         n1, n2 = conn[i].split("-")
         if (n1 == node1 and n2 == node2) or (n2 == node1 and n1 == node2):
-            delete_list.append(i)
+            delete_list.append(conn[i])
         elif n1 == node1:
             conn[i] = fused + "-" + n2
         elif n2 == node1:
@@ -91,7 +90,7 @@ def update_connections(conn, node1, node2):
         elif n2 == node2:
             conn[i] = fused + "-" + n1
     for d in delete_list:
-        del conn[d]
+        conn.remove(d)
     return list(set(conn))
 
 
@@ -102,7 +101,8 @@ def build_graph_networkx(nodes, connections):
     for connection in connections:
         links = connection.split("-")
         graph.add_edge(links[0], links[1], cross_node="")
-    graph = check_if_graph_connected(graph)
+    if connections:
+        graph = check_if_graph_connected(graph)
     return graph
 
 
@@ -112,8 +112,10 @@ def check_if_graph_connected(graph):
         return graph
     else:
         print "Graph not connected. It needs more edges to be connected."
-        graph = utilities.add_edges_isolated_nodes(graph, nx)
-        graph = utilities.add_edges(graph)
+        if settings.ADD_MORE_EDGES:
+            graph = utilities.add_edges_isolated_nodes(graph, nx)
+        if settings.ADD_EDGES_THROUGH_DFS:
+            graph = utilities.add_edges(graph)
         return graph
 
 
@@ -122,7 +124,6 @@ def print_graph(graph):
     nx.draw(graph, pos, with_labels=True)
     edge_labels = nx.get_edge_attributes(graph, 'cross_node')
     nx.draw_networkx_edge_labels(graph, pos, edge_labels=edge_labels, font_color='red')
-    print "Thematic view has: ", graph.number_of_nodes(), " nodes and ", graph.number_of_edges(), " edges."
     plt.show()
 
 
