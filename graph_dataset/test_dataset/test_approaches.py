@@ -15,6 +15,8 @@ if __name__ == "__main__":
     profiles.start()
     performance.get_network_characteristic()
     if settings.SUPERVISED_APPROACH:
+        performance.approach = settings.SUPERVISED_APPROACH
         graph = supervised_approach.start(profiles, neo, performance)
     else:
+        performance.approach = 0
         graph = unsupervised_approach.start(profiles, neo, performance)

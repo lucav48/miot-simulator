@@ -13,9 +13,9 @@ def start(profiles, neo, performance):
     merged_connections = merge_connections(connections, unsupervised_instances)
     fill_unsupervised_instances(unsupervised_instances, instances_merged, profiles.p_content_single_instance)
     graph = build_graph(unsupervised_instances, merged_connections, profiles.p_content_single_instance)
-    performance.get_graph_parameters(graph)
+    colour_map = performance.get_graph_parameters_and_colors(graph)
     performance.get_end_time()
-    print_graph(graph)
+    print_graph(graph, colour_map)
     return graph
 
 
@@ -48,9 +48,9 @@ def build_graph(instances, connections, p_single_instance):
     return graph
 
 
-def print_graph(graph):
+def print_graph(graph, colour_map):
     pos = nx.spring_layout(graph)
-    nx.draw(graph, pos, with_labels=True)
+    nx.draw(graph, pos, node_color=colour_map, with_labels=True)
     edge_labels = nx.get_edge_attributes(graph, 'j_star')
     nx.draw_networkx_edge_labels(graph, pos, edge_labels=edge_labels, font_color='red')
     plt.show()

@@ -13,9 +13,9 @@ def start(profiles, neo, performance):
     print "There are ", len(refactor_ri), " compatible to user's query."
     graph = build_graph_networkx(refactor_ri, ri_connections)
     print "Thematic view has: ", graph.number_of_nodes(), " nodes and ", graph.number_of_edges(), " edges."
-    performance.get_graph_parameters(graph)
+    colour_map = performance.get_graph_parameters_and_colors(graph)
     performance.get_end_time()
-    print_graph(graph)
+    print_graph(graph, colour_map)
     return graph
 
 
@@ -119,9 +119,9 @@ def check_if_graph_connected(graph):
         return graph
 
 
-def print_graph(graph):
+def print_graph(graph, colour_map):
     pos = nx.spring_layout(graph)
-    nx.draw(graph, pos, with_labels=True)
+    nx.draw(graph, pos, node_color = colour_map,with_labels=True)
     edge_labels = nx.get_edge_attributes(graph, 'cross_node')
     nx.draw_networkx_edge_labels(graph, pos, edge_labels=edge_labels, font_color='red')
     if graph.nodes:

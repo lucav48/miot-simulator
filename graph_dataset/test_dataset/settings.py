@@ -8,7 +8,10 @@ ADD_MORE_EDGES = 0
 ADD_EDGES_THROUGH_DFS = 1
 
 # supervised settings
-TOPIC_SUPERVISED_APPROACH = ['Music', 'Engineering']
+TOPIC_SUPERVISED_APPROACH = ['Engineering']
 THRESHOLD_SUPERVISED = 0.2
 # unsupervised settings
 ALPHA_COEFFICIENT = 0.02
+
+
+COLORS = ["green", "red", "blue", "grey", "yellow", "purple", "orange"]
