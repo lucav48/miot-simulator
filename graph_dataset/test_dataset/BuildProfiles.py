@@ -42,6 +42,7 @@ class BuildProfiles:
         profile_single_instance = {}
         for instance in instances:
             profile_single_instance[instance.code] = {}
+            profile_single_instance[instance.code]["community"] = instance.community
             couples = [key for key in profile_couples if key.split("-")[0] == instance.code
                        or key.split("-")[1] == instance.code]
             # for each property to watch
@@ -119,7 +120,7 @@ class BuildProfiles:
         for node in content_based:
             merged_profiles[node] = {}
             for characteristic in content_based[node]:
-                if node in collaborative_filtering:
+                if node in collaborative_filtering and characteristic != "community":
                     merged_profiles[node][characteristic] = utilities.sum_occurrences_dict(
                         content_based[node][characteristic],
                         collaborative_filtering[node][characteristic]

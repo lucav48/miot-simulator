@@ -71,7 +71,7 @@ def setup_and_create_connections(list_object, travel_distances):
     results_query = [item for sublist in results_query_list for item in sublist]
     results_connections = [item for sublist in results_connections_list for item in sublist]
     neoManager.neo4j_create_connections_query = results_query
-    return results_query, results_connections
+    return results_connections
 
 
 def create_connections(list_instances, min_v, max_v, n_instances, travel_distances,
@@ -87,12 +87,18 @@ def create_connections(list_instances, min_v, max_v, n_instances, travel_distanc
             travel_code2 = list_instances[j].travel_path
             if int(travel_code1) < int(travel_code2):
                 if travel_distances[travel_code1][travel_code2] < settings.LIMIT_METER_CONNECTION:
+                    connection_type = "i"
+                    if instance.community != list_instances[j].community:
+                        connection_type = "c"
                     connections_query.append(neoManager.create_query_connection(code1, code2))
-                    connections_tuples.append((code1, code2))
+                    connections_tuples.append((code1, code2, connection_type))
             else:
                 if travel_distances[travel_code2][travel_code1] < settings.LIMIT_METER_CONNECTION:
+                    connection_type = "i"
+                    if instance.community != list_instances[j].community:
+                        connection_type = "c"
                     connections_query.append(neoManager.create_query_connection(code1, code2))
-                    connections_tuples.append((code1, code2))
+                    connections_tuples.append((code1, code2, connection_type))
             # connected = utilities.check_two_paths(instance.travel_path, list_instances[j].travel_path)
             # if connected:
             #     connections.append(instance.code + "-" + list_instances[j].code)
@@ -116,19 +122,35 @@ def choose_transaction_context(instance_start, instance_end, all_context):
     for key, value in all_context.items():
         if sign in value or reverse_sign in value:
             talked_about.append(key)
-
+    # get context that instance start and end talked about
+    talked_about_instance_start = []
+    talked_about_instance_end = []
+    for key, list_couple_instances in all_context.items():
+        if list_couple_instances:
+            for couple_instance in list_couple_instances:
+                if instance_start == couple_instance.split("-")[0] or instance_start == couple_instance.split("-")[1]:
+                    talked_about_instance_start.append(key)
+                elif instance_end == couple_instance.split("-")[0] or instance_end == couple_instance.split("-")[1]:
+                    talked_about_instance_end.append(key)
+    intersect_talked_about = [x for x in talked_about_instance_start if x in talked_about_instance_end]
     # if this is first transaction
     if not talked_about:
-        content_result = random.choice(all_context.keys())
-        all_context[content_result] = sign
+        if intersect_talked_about:
+            content_result = random.choice(intersect_talked_about)
+        else:
+            content_result = random.choice(all_context.keys())
+        all_context[content_result].append(sign)
     # if this isn't first transaction
     else:
         probability = random.random()
         if probability < settings.PROBABILITY_TO_CHOOSE_FROM_CONTEXT_ALREADY_USED:
             content_result = random.choice(talked_about)
         else:
-            content_result = random.choice(all_context.keys())
-            all_context[content_result] = sign
+            if intersect_talked_about:
+                content_result = random.choice(intersect_talked_about)
+            else:
+                content_result = random.choice(all_context.keys())
+            all_context[content_result].append(sign)
     return content_result
 
 
@@ -146,7 +168,7 @@ def create_transactions(list_instances, list_connections, context_list):
             new_context = choose_transaction_context(instance_start, instance_connected, context_list)
             # choose message from context
             message, timestamp = choose_message_from_context(new_context)
-            # create transaction/8
+            # create transaction
             new_transaction = Transaction.Transaction(i, instance_start,
                                                       instance_connected, timestamp, new_context, message)
             transactions_list.append(new_transaction)
@@ -155,7 +177,7 @@ def create_transactions(list_instances, list_connections, context_list):
 
 
 def get_instance_connected(instance_start, connections_list):
-    instances_connected = [(x, y) for (x, y) in connections_list if x == instance_start or y == instance_start]
+    instances_connected = [(x, y) for (x, y, _) in connections_list if x == instance_start or y == instance_start]
     if instances_connected:
         (x, y) = random.choice(instances_connected)
         if x == instance_start:
@@ -178,7 +200,7 @@ def choose_message_from_context(con):
 
 
 def create_instances_of_objects(object_list):
-    travel_index_chosen = range(1, len(readFile.travel_distances.keys()))
+    travel_index_chosen = range(1, len(readFile.travel_array) - 1)
     num_instances = 0
     for one_object in object_list:
         for i in range(0, one_object.num_instances):
@@ -187,10 +209,45 @@ def create_instances_of_objects(object_list):
             # travel = utilities.travel_to_dataframe(readFile.travel_array[travel_index])
             travel_index_chosen.remove(travel_index)
             instance_code = one_object.code + ":" + str(i)
+            #num_community = get_closest_community(str(travel_index), readFile)
             num_community = random.choice(range(1, settings.NUMBER_OF_COMMUNITIES + 1))
             one_object.instances.append(Instance.Instance(travel_index, instance_code, num_community))
             num_instances += 1
     print "Instances of objects created: ", str(num_instances)
+
+
+def get_closest_community(travel_index, readFile):
+    community = 0
+    min_distance = 100000
+    travel_string = readFile.travel_array[int(travel_index) - 1]
+    travel_path = utilities.string_to_path(travel_string)
+    for leader in settings.NUMBER_OF_COMMUNITIES:
+        distance = utilities.calculate_haversine(travel_path, leader)
+        if distance < min_distance:
+            min_distance = distance
+            community = settings.NUMBER_OF_COMMUNITIES.index(leader) + 1
+    return community
+
+
+def shape_number_c_arc(connections_list):
+    # count number i arc
+    n_iarc = []
+    n_carc = []
+    for (x, y, conn_type) in connections_list:
+        if conn_type == "i":
+            n_iarc.append((x, y, conn_type))
+        else:
+            n_carc.append((x, y, conn_type))
+    print "Number of i-arc: ", str(len(n_iarc))
+    print "Number of c-arc: ", str(len(n_carc))
+    number_edges_to_delete = int(len(n_carc) - len(n_iarc) * settings.PERCENTAGE_C_ARC)
+    print "C-arc deleted: ", str(number_edges_to_delete)
+    for i in range(0, number_edges_to_delete):
+        delete_edge = random.choice(n_carc)
+        neoManager.delete_c_arc(delete_edge[0], delete_edge[1])
+        n_carc.remove(delete_edge)
+        connections_list.remove(delete_edge)
+    return connections_list
 
 
 def prepare_environment():
@@ -223,8 +280,9 @@ def prepare_nodes():
 def prepare_nodes_connections(list_objects, travel_distances):
     # look for connections among nodes
     print "Relationship creation.."
-    _, connections_list = setup_and_create_connections(list_objects, travel_distances)
-    print "Number of connections: ", len(connections_list)
+    connections_list = setup_and_create_connections(list_objects, travel_distances)
+    print "Number of connections before shaping number of c-arc: ", len(connections_list)
+    connections_list = shape_number_c_arc(connections_list)
     print "Relationship created."
     return connections_list
 
@@ -257,7 +315,7 @@ def delete_isolated_nodes():
 
 if __name__ == "__main__":
     # read data useful to create nodes
-    utilities.print_date()
+    utilities.print_date("started")
     print "Read and prepare to create dataset"
     readFile = ReadFile.ReadFile()
     neoManager = Neo4JManager.Neo4JManager()
@@ -268,4 +326,4 @@ if __name__ == "__main__":
     adjust_communities()
     prepare_transactions(instances, connections, context)
     print_neo4j_queries()
-    utilities.print_date()
+    utilities.print_date("ended")

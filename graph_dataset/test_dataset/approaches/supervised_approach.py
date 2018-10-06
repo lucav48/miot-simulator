@@ -9,11 +9,16 @@ def start(profiles, neo, performance):
     q_first = utilities.define_q_first()
     ci = build_ci(profiles.p_content_single_instance, q_first)
     ri = build_ri(ci, q_first)
+    print "Topic requested: ", ', '.join(settings.TOPIC_SUPERVISED_APPROACH)
+    print "Threshold to filter instances: ", str(settings.THRESHOLD_SUPERVISED)
+    print "Recall supervised Candidate instances: ", len(ci), " Filtered instances: ", len(ri)
+    performance.get_table_communities(ri, profiles.p_content_single_instance)
     refactor_ri, ri_connections = build_connections(ri, neo)
     print "There are ", len(refactor_ri), " compatible to user's query."
     graph = build_graph_networkx(refactor_ri, ri_connections)
     print "Thematic view has: ", graph.number_of_nodes(), " nodes and ", graph.number_of_edges(), " edges."
     colour_map = performance.get_graph_parameters_and_colors(graph)
+    performance.print_table_communities()
     performance.get_end_time()
     print_graph(graph, colour_map)
     return graph
@@ -35,8 +40,8 @@ def build_connections(nodes, neo):
                     connections.append(node + "-" + neighbor)
         if not fusing_nodes[node]:
             del fusing_nodes[node]
-    nodes, connections = fuse_node(nodes, fusing_nodes, connections)
-    return nodes, connections
+    new_nodes, connections = fuse_node(nodes, fusing_nodes, connections)
+    return new_nodes, connections
 
 
 def fuse_node(nodes, f_nodes, conn):
@@ -115,13 +120,13 @@ def check_if_graph_connected(graph):
         if settings.ADD_MORE_EDGES:
             graph = utilities.add_edges_isolated_nodes(graph, nx)
         if settings.ADD_EDGES_THROUGH_DFS:
-            graph = utilities.add_edges(graph)
+            graph = utilities.add_edges_dfs(graph)
         return graph
 
 
 def print_graph(graph, colour_map):
     pos = nx.spring_layout(graph)
-    nx.draw(graph, pos, node_color = colour_map,with_labels=True)
+    nx.draw(graph, pos, node_color=colour_map, with_labels=True)
     edge_labels = nx.get_edge_attributes(graph, 'cross_node')
     nx.draw_networkx_edge_labels(graph, pos, edge_labels=edge_labels, font_color='red')
     if graph.nodes:

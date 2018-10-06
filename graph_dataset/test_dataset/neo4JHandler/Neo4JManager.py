@@ -129,11 +129,25 @@ class Neo4JManager(Neo4JInstance):
         for row in query_result:
             n_transactions = row["transactions"]
         # number of relationships
-        query = "MATCH(n:Instance)-[r:LINKED]->(n2:Instance) RETURN COUNT(r) as relationships"
+        query = "MATCH(n:Instance)-[r:LINKED]-(n2:Instance) RETURN COUNT(DISTINCT(r)) as relationships"
         query_result = self.execute_query(query)
         n_relationships = 0
         for row in query_result:
             n_relationships = row["relationships"]
+        # number of c arch
+        query = "MATCH(n:Instance)-[r:LINKED]-(n2:Instance) WHERE n.community <> n2.community " \
+                "RETURN COUNT(DISTINCT(r)) as relationships"
+        query_result = self.execute_query(query)
+        n_carch = 0
+        for row in query_result:
+            n_carch = row["relationships"]
+        # number of i arch
+        query = "MATCH(n:Instance)-[r:LINKED]-(n2:Instance) WHERE n.community = n2.community " \
+                "RETURN COUNT(DISTINCT(r)) as relationships"
+        query_result = self.execute_query(query)
+        n_iarch = 0
+        for row in query_result:
+            n_iarch = row["relationships"]
         # average number of neighborhood
         query = "MATCH(n:Instance)-[r:LINKED]->(n2:Instance) WITH n, count(n2) as nodes return avg(nodes) as average"
         query_result = self.execute_query(query)
@@ -142,7 +156,7 @@ class Neo4JManager(Neo4JInstance):
             avg_neighborhood = round(row["average"], 2)
         triangle_count, avg_cluster_coefficient = self.get_clustering_coefficient()
         list_cluster_coefficients = self.get_cluster_cofficients_of_each_community()
-        return n_nodes, n_transactions, n_relationships, avg_neighborhood, triangle_count, \
+        return n_nodes, n_transactions, n_relationships, n_iarch, n_carch, avg_neighborhood, triangle_count, \
             avg_cluster_coefficient, list_cluster_coefficients
 
     def get_cluster_cofficients_of_each_community(self):

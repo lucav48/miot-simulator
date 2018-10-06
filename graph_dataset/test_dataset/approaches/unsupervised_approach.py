@@ -28,7 +28,7 @@ def build_graph(instances, connections, p_single_instance):
                 j_star = utilities.jaccard_star(instances[node][settings.TRANSACTION_CONTEXT_FIELD],
                                                 instances[conn][settings.TRANSACTION_CONTEXT_FIELD])
                 j_star = round(j_star, 2)
-                graph.add_edge(node, conn, j_star=j_star)
+                graph.add_edge(node, conn, weight=j_star)
             else:
                 complete_connection = utilities.has_partial_key(instances.keys(), conn)
                 if complete_connection:
@@ -43,7 +43,7 @@ def build_graph(instances, connections, p_single_instance):
                         j_star = utilities.jaccard_star(instances[node][settings.TRANSACTION_CONTEXT_FIELD],
                                                         instances[complete_connection][settings.TRANSACTION_CONTEXT_FIELD])
                     j_star = round(j_star, 2)
-                    graph.add_edge(node, complete_connection, j_star=j_star)
+                    graph.add_edge(node, complete_connection, weight=j_star)
     print "Thematic view has: ", graph.number_of_nodes(), " nodes and ", graph.number_of_edges(), " edges."
     return graph
 
@@ -51,7 +51,7 @@ def build_graph(instances, connections, p_single_instance):
 def print_graph(graph, colour_map):
     pos = nx.spring_layout(graph)
     nx.draw(graph, pos, node_color=colour_map, with_labels=True)
-    edge_labels = nx.get_edge_attributes(graph, 'j_star')
+    edge_labels = nx.get_edge_attributes(graph, 'weight')
     nx.draw_networkx_edge_labels(graph, pos, edge_labels=edge_labels, font_color='red')
     plt.show()
 

@@ -18,6 +18,10 @@ def write_to_file(neoManager):
     output_file.write(":begin\n")
     print_list(output_file, neoManager.neo4j_create_connections_query)
     output_file.write("\n:commit\n")
+    # delete c arc
+    output_file.write(":begin\n")
+    print_list(output_file, neoManager.neo4j_delete_c_arc_query)
+    output_file.write("\n:commit\n")
     # add transactions
     output_file.write(":begin\n")
     print_list(output_file, neoManager.neo4j_create_transactions_query)

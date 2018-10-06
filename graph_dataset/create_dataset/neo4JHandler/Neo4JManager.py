@@ -15,6 +15,7 @@ class Neo4JManager(Neo4JInstance):
         self.neo4j_create_transactions_query = []
         self.neo4j_adjust_communities_query = ""
         self.neo4j_delete_isolated_nodes_query = ""
+        self.neo4j_delete_c_arc_query = []
         # load settings
         self.object_label = settings.NEO4J_OBJECT_LABEL
         self.instance_label = settings.NEO4J_INSTANCE_LABEL
@@ -86,3 +87,8 @@ class Neo4JManager(Neo4JInstance):
                 "MATCH(n:Instance) WHERE n.code = single_node SET n.community = the_one[0].community;"
         self.neo4j_adjust_communities_query = query
 
+    def delete_c_arc(self, start_node, end_node):
+        query = "MATCH(n1:Instance)-[r:LINKED]-(n2:Instance) " +\
+                "WHERE n1.code='" + start_node + "' AND n2.code='" + end_node + "' " +\
+                "DELETE r"
+        self.neo4j_delete_c_arc_query.append(query)

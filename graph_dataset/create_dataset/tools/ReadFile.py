@@ -31,6 +31,8 @@ class ReadFile:
         self.technical_header = self.technical_array[0]
         del self.technical_array[0]
         self.travel_distances = json.load(open(settings.TRAVEL_JSON))
+        self.travel_array = self.read_file(self.travel_path_file)
+        del self.travel_array[0]
 
     def read_file(self, path_file):
         extension = path_file.split(".")[1]

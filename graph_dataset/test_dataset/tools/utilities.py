@@ -66,12 +66,13 @@ def subset(list1, list2):
     return False
 
 
-def add_edges(g):
+def add_edges_dfs(g):
     no_comp = 0
     comp = {}
     vis = {}
     size_comp = {}
     edges = {}
+    number_edges = 0
     for node in g.nodes:
         edges[node] = {}
         comp[node] = {}
@@ -97,7 +98,9 @@ def add_edges(g):
         for key2 in comp[key1]:
             if comp[key1][key2] != 0:
                 g.add_edge(key1, key2, cross_node="X")
-                print "Added ", key1, "   ", key2
+                number_edges += 1
+                # print "Added ", key1, "   ", key2
+    print "Added " + str(number_edges) + " edges"
     return g
 
 
