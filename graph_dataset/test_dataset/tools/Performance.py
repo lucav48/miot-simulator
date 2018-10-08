@@ -21,13 +21,14 @@ class Performance:
         self.neo = neo4j
 
     def get_network_characteristic(self):
-        nodes, transactions, n_relation, n_iarch, n_carch, avg_neighborhood, triangle_count, \
-        avg_cluster_cofficient, list_cluster_coefficients = self.neo.get_network_values()
+        nodes, transactions, n_relation, n_iarch, n_carch, avg_neighborhood, triangle_count,\
+        avg_cluster_cofficient, list_cluster_coefficients, message_list_obj_instances = self.neo.get_network_values()
         print "-" * 100
         print "Network Characteristics"
         print "Nodes: ", nodes, " Relationships among instances: ", n_relation, " (i-arch: " + str(n_iarch) +\
                                                                                 " c-arch: " + str(n_carch) + \
                                                                                 ") Transactions: ", transactions
+        print message_list_obj_instances
         print "Average neighborhood: ", avg_neighborhood, " Average transactions per nodes: ", round(float(transactions)/nodes, 3)
         print "Triangle count: ", triangle_count, " Avg. cluster coefficient: ", avg_cluster_cofficient
         print "Cluster coefficient for communities: ", list_cluster_coefficients
@@ -43,6 +44,7 @@ class Performance:
             print "Triangles count: ", sum(list(nx.triangles(graph).values()))
             if settings.SUPERVISED_APPROACH:
                 colour_map = ["red"] * len(graph.nodes)
+                print "Average density: ", str(nx.density(graph))
             else:
                 # k_clique, k_best = self.get_best_k_for_clique(graph)
                 greedy = list(greedy_modularity_communities(graph))
@@ -99,7 +101,8 @@ class Performance:
     def calculate_cluster_coefficient_cliques(self, list_cliques, graph):
         cluster_coefficients_string = ""
         i = 1
-        sum_coefficients = 0.
+        sum_cluster_coefficients = 0.
+        sum_density_coefficients = 0.
         for cliques in list_cliques:
             clique_graph = nx.Graph()
             for node in cliques:
@@ -110,14 +113,20 @@ class Performance:
                         clique_graph.add_edge(nodex, nodey)
                     elif nodey != node and nodey in cliques:
                         clique_graph.add_edge(nodex, nodey)
-            single_coefficient = round(nx.average_clustering(clique_graph), 3)
-            cluster_coefficients_string = cluster_coefficients_string + "Community " + str(i) + " " +\
-                                   str(single_coefficient) + "  "
-            sum_coefficients += single_coefficient
+            single_cluster_coefficient = round(nx.average_clustering(clique_graph), 3)
+            single_density_coefficient = round(nx.density(clique_graph), 3)
+            cluster_coefficients_string = cluster_coefficients_string + "Community " + str(i) + \
+                                          " Cluster coeff.:" + str(single_cluster_coefficient) + \
+                                          "  Density:" + str(single_density_coefficient) + "\n"
+            sum_cluster_coefficients += single_cluster_coefficient
+            sum_density_coefficients += single_density_coefficient
             i += 1
-        avg_coefficients = round(sum_coefficients / i, 3)
-        complete_message = "Avg. coefficient: " + str(avg_coefficients) + "  " + cluster_coefficients_string
-        return complete_message
+        avg_cluster_coefficient = round(sum_cluster_coefficients / i, 3)
+        avg_density_coefficient = round(sum_density_coefficients / i, 3)
+        message = "Avg. cluster coefficient: " + str(avg_cluster_coefficient) + "\n" +\
+                  "Avg. density coefficient: " + str(avg_density_coefficient) + "\n" + \
+                  cluster_coefficients_string
+        return message
 
     def get_start_time(self):
         self.start_time = time.strftime("%H:%M:%S")

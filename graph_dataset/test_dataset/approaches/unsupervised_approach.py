@@ -15,7 +15,7 @@ def start(profiles, neo, performance):
     graph = build_graph(unsupervised_instances, merged_connections, profiles.p_content_single_instance)
     colour_map = performance.get_graph_parameters_and_colors(graph)
     performance.get_end_time()
-    print_graph(graph, colour_map)
+    #print_graph(graph, colour_map)
     return graph
 
 

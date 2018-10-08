@@ -156,8 +156,17 @@ class Neo4JManager(Neo4JInstance):
             avg_neighborhood = round(row["average"], 2)
         triangle_count, avg_cluster_coefficient = self.get_clustering_coefficient()
         list_cluster_coefficients = self.get_cluster_cofficients_of_each_community()
+        # get number of instances according to objects
+        query = "MATCH(o:Object)-[:HAS_INSTANCE]->(n:Instance) " +\
+                "WITH o.code as obj, collect(n.code) AS instances " +\
+                "RETURN count(obj) as num_objects, size(instances) as num_instances"
+        query_result = self.execute_query(query)
+        message_list_obj_instances = "Instances per object: "
+        for row in query_result:
+            message_list_obj_instances = message_list_obj_instances + str(row["num_objects"]) + " objects has " +\
+                str(row["num_instances"]) + " instances. "
         return n_nodes, n_transactions, n_relationships, n_iarch, n_carch, avg_neighborhood, triangle_count, \
-            avg_cluster_coefficient, list_cluster_coefficients
+            avg_cluster_coefficient, list_cluster_coefficients, message_list_obj_instances
 
     def get_cluster_cofficients_of_each_community(self):
         community_list = list(range(1, create_settings.NUMBER_OF_COMMUNITIES + 1))

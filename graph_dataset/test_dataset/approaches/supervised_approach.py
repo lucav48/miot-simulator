@@ -20,7 +20,7 @@ def start(profiles, neo, performance):
     colour_map = performance.get_graph_parameters_and_colors(graph)
     performance.print_table_communities()
     performance.get_end_time()
-    print_graph(graph, colour_map)
+    # print_graph(graph, colour_map)
     return graph
 
 
@@ -117,10 +117,10 @@ def check_if_graph_connected(graph):
         return graph
     else:
         print "Graph not connected. It needs more edges to be connected."
-        if settings.ADD_MORE_EDGES:
-            graph = utilities.add_edges_isolated_nodes(graph, nx)
         if settings.ADD_EDGES_THROUGH_DFS:
             graph = utilities.add_edges_dfs(graph)
+        if settings.ADD_MORE_EDGES:
+            graph = utilities.add_edges_isolated_nodes(graph, nx)
         return graph
 
 
