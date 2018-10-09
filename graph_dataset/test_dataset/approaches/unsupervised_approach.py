@@ -13,10 +13,18 @@ def start(profiles, neo, performance):
     merged_connections = merge_connections(connections, unsupervised_instances)
     fill_unsupervised_instances(unsupervised_instances, instances_merged, profiles.p_content_single_instance)
     graph = build_graph(unsupervised_instances, merged_connections, profiles.p_content_single_instance)
-    colour_map = performance.get_graph_parameters_and_colors(graph)
+    unsupervised_profiles = get_profiles_of_unsupervised_instances(unsupervised_instances)
+    colour_map = performance.get_graph_parameters_and_colors(graph, unsupervised_profiles)
     performance.get_end_time()
     #print_graph(graph, colour_map)
     return graph
+
+
+def get_profiles_of_unsupervised_instances(unsupervised_instances):
+    profiles = {}
+    for instance in unsupervised_instances:
+        profiles[instance] = unsupervised_instances[instance]["context"]
+    return profiles
 
 
 def build_graph(instances, connections, p_single_instance):
@@ -84,10 +92,11 @@ def merge_connections(connections, unsupervised_instances):
 def merge_instances(instances_to_merge, p_single_instance):
     merged_instances = {}
     instances = []
+    community = {}
+    print "Details on C-nodes fused community"
     for in_to_merge in instances_to_merge:
-        if in_to_merge == "56:2":
-            print "debug"
         if in_to_merge not in instances:
+            community[p_single_instance[in_to_merge]["community"]] = 1
             new_code = in_to_merge
             new_profile = p_single_instance[in_to_merge].copy()
             for related_instance in instances_to_merge[in_to_merge]:
@@ -103,6 +112,13 @@ def merge_instances(instances_to_merge, p_single_instance):
                     new_profile[prop] = utilities.sum_occurrences_dict(new_profile[prop],
                                                                        profile_to_fuse[prop])
                 instances.append(related_instance)
+                community_related_instance = p_single_instance[related_instance]["community"]
+                if community_related_instance in community:
+                    community[community_related_instance] = community[community_related_instance] + 1
+                else:
+                    community[community_related_instance] = 1
             instances.append(in_to_merge)
             merged_instances[new_code] = new_profile
+            print "Node: ", in_to_merge, " ", community.items()
+
     return merged_instances, instances

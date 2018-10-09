@@ -13,18 +13,18 @@ def start(profiles, neo, performance):
     print "Threshold to filter instances: ", str(settings.THRESHOLD_SUPERVISED)
     print "Recall supervised Candidate instances: ", len(ci), " Filtered instances: ", len(ri)
     performance.get_table_communities(ri, profiles.p_content_single_instance)
-    refactor_ri, ri_connections = build_connections(ri, neo)
+    refactor_ri, ri_connections = build_connections(ri, neo, profiles.p_content_single_instance)
     print "There are ", len(refactor_ri), " compatible to user's query."
     graph = build_graph_networkx(refactor_ri, ri_connections)
     print "Thematic view has: ", graph.number_of_nodes(), " nodes and ", graph.number_of_edges(), " edges."
-    colour_map = performance.get_graph_parameters_and_colors(graph)
+    colour_map = performance.get_graph_parameters_and_colors(graph, refactor_ri)
     performance.print_table_communities()
     performance.get_end_time()
     # print_graph(graph, colour_map)
     return graph
 
 
-def build_connections(nodes, neo):
+def build_connections(nodes, neo, profile_instances):
     connections = []
     fusing_nodes = {}
     for node in nodes:
@@ -40,11 +40,11 @@ def build_connections(nodes, neo):
                     connections.append(node + "-" + neighbor)
         if not fusing_nodes[node]:
             del fusing_nodes[node]
-    new_nodes, connections = fuse_node(nodes, fusing_nodes, connections)
+    new_nodes, connections = fuse_node(nodes, fusing_nodes, connections, profile_instances)
     return new_nodes, connections
 
 
-def fuse_node(nodes, f_nodes, conn):
+def fuse_node(nodes, f_nodes, conn, profile_instances):
     # now i fuse nodes
     for node in f_nodes:
         if f_nodes[node]:
@@ -73,7 +73,17 @@ def fuse_node(nodes, f_nodes, conn):
     # print number of nodes fused
     print "-" * 100
     cont = len(fusing_nodes_complete)
+    print "Details on C-nodes fused community"
     for node in fusing_nodes_complete:
+        community = {}
+        community[profile_instances[node]["community"]] = 1
+        for list_node in fusing_nodes_complete[node]:
+            node_community = profile_instances[list_node]["community"]
+            if node_community in community:
+                community[node_community] = community[node_community] + 1
+            else:
+                community[node_community] = 1
+        print "Node: ", node, " ", community.items()
         cont += len(fusing_nodes_complete[node])
     print "Number of c-nodes fused: ", cont
     return nodes, conn

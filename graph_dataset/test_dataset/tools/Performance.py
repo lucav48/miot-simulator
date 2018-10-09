@@ -16,9 +16,13 @@ class Performance:
         self.start_time = None
         self.end_time = None
         self.table_communities = {}
+        self.profile_instances = None
 
     def set_neo4j(self, neo4j):
         self.neo = neo4j
+
+    def set_profiles(self, prof):
+        self.profile_instances = prof
 
     def get_network_characteristic(self):
         nodes, transactions, n_relation, n_iarch, n_carch, avg_neighborhood, triangle_count,\
@@ -34,17 +38,25 @@ class Performance:
         print "Cluster coefficient for communities: ", list_cluster_coefficients
         print "-" * 100
 
-    def get_graph_parameters_and_colors(self, graph):
+    def get_graph_parameters_and_colors(self, graph, approach_profiles):
         print "-" * 100
         colour_map = []
         if graph.edges:
             # k:11 ---> 2 k:17 ---> 4 k:18 ---> 4
             print "Community algorithms"
-            print "Average clustering coefficient: ", nx.average_clustering(graph)
             print "Triangles count: ", sum(list(nx.triangles(graph).values()))
+            print "Average clustering coefficient: ", nx.average_clustering(graph)
             if settings.SUPERVISED_APPROACH:
                 colour_map = ["red"] * len(graph.nodes)
                 print "Average density: ", str(nx.density(graph))
+                connected_components = nx.connected_components(graph)
+                string_component = "Components"
+                i = 1
+                for component in connected_components:
+                    string_component = string_component + "\n n: " + str(i) + " length: " + str(len(component))
+                    i += 1
+                print string_component
+                self.information_flow_comparison(graph, approach_profiles)
             else:
                 # k_clique, k_best = self.get_best_k_for_clique(graph)
                 greedy = list(greedy_modularity_communities(graph))
@@ -64,12 +76,143 @@ class Performance:
                     cluster_coefficient_cliques = self.calculate_cluster_coefficient_cliques(set_partition, graph)
                     print "Louvain (n_communities=" + str(size) + ")"
                     print cluster_coefficient_cliques
-
-
+                    self.information_flow_comparison(graph, approach_profiles)
         else:
             print "No connections in graph, I can't apply algorithms to it."
         print "-" * 100
         return colour_map
+
+    def information_flow_comparison(self, graph, approach_profiles):
+        i = 0
+        number_hops_original_graph = settings.DEPTH_INFORMATION_FLOW
+        neo4j_list_nodes = self.get_list_nodes(graph.nodes)
+        while i < settings.NUMBER_EXPERIMENT_INFORMATION_FLOW:
+            # get node start thematic_view_start_node includes merged nodes, while neo4j_start_node is the single
+            # instance
+            thematic_view_start_node, neo4j_start_node = \
+                self.split_node_and_get_random_instance(random.choice(list(graph.nodes)))
+            # apply bfs at certain distance in neo4j graph and choose an end node
+            neo4j_visited_nodes, neo4j_count_nodes, end_node = \
+                self.neo.get_node_by_bfs_at_distance(neo4j_start_node, neo4j_list_nodes, number_hops_original_graph)
+            # nodes has to share at least one context
+            if settings.SUPERVISED_APPROACH:
+                source_and_target_context = settings.TOPIC_SUPERVISED_APPROACH
+            else:
+                source_and_target_context = self.intersect_profiles(neo4j_start_node, end_node)
+            if end_node != -1 and source_and_target_context:
+                # get end_node in thematic view form (merged node or not)
+                thematic_view_end_node = self.get_thematic_view_node(graph.nodes, end_node)
+                # apply bfs to thematic view
+                thematic_view_node_visited, thematic_view_count, thematic_view_depth = \
+                    self.compute_bfs(graph, thematic_view_start_node, thematic_view_end_node)
+                # first print
+                print "-" * 100
+                print "Starting from ", thematic_view_start_node, " targeting ", thematic_view_end_node, "\n",\
+                    "\tNeo4J nodes involved: ", str(neo4j_count_nodes), "\n", \
+                    "\tThematic view node involved: ", str(thematic_view_count), "\n", \
+                    "\tNeo4J depth: ", str(number_hops_original_graph), "\n", \
+                    "\tThematic depth: ", str(thematic_view_depth)
+                print"\tNeo4J context"
+                # for each context common to source and target node, we have to count how many nodes have that
+                # context during the path and we have to divide that number for the total of nodes traversed by bfs.
+                for context in source_and_target_context:
+                    context_coefficient = self.count_nodes_with_that_context(neo4j_visited_nodes, None, context) / \
+                                          float(len(neo4j_visited_nodes))
+                    print "\tContext involved: ", context, " coefficient: ", str(round(context_coefficient, 3))
+                # same thing for graph obtained by
+                if len(thematic_view_node_visited) > 0:
+                    if not settings.SUPERVISED_APPROACH:
+                        print "\tUnsupervised context"
+                    else:
+                        print "\tSupervised context"
+                    for context in source_and_target_context:
+                        context_coefficient = self.count_nodes_with_that_context(thematic_view_node_visited,
+                                                                                 approach_profiles, context) /\
+                                              float(len(thematic_view_node_visited))
+                        print "\tContext involved: ", context, " coefficient: ", str(round(context_coefficient, 3))
+            i += 1
+
+    def count_nodes_with_that_context(self, nodes, profiles, context):
+        count_nodes = 0
+        for node in nodes:
+            if profiles is None:
+                profile_node = self.profile_instances[node]["context"]
+            else:
+                profile_node = profiles[node]
+            if context in profile_node:
+                count_nodes += 1
+        return count_nodes
+
+    def intersect_profiles(self, node1, node2):
+        profile1 = self.profile_instances[node1]["context"]
+        profile2 = self.profile_instances[node2]["context"]
+        intersect_profile = []
+        for key in profile1:
+            if key in profile2:
+                intersect_profile.append(key)
+        return intersect_profile
+
+    def calculate_topics_nodes(self, visited_nodes):
+        talked_about = {}
+        for neo4j_node in visited_nodes:
+            node_context = self.profile_instances[neo4j_node]["context"]
+            for single_context in node_context:
+                if single_context in talked_about:
+                    talked_about[single_context] = talked_about[single_context] + 1
+                else:
+                    talked_about[single_context] = 1
+        sorted_talked_about = sorted([(v, k) for (k, v) in talked_about.items()], reverse=True)
+        return sorted_talked_about
+
+    def compute_bfs(self, graph, start_node, end_node):
+        depth = 0
+        found_depth = False
+        count_nodes = 0
+        nodes_visited = []
+        while not found_depth:
+            edges = nx.bfs_edges(graph, source=start_node, depth_limit=depth)
+            nodes = [v for u, v in edges]
+            nodes_at_this_depth = self.difference_list(nodes, nodes_visited)
+            if end_node in nodes:
+                found_depth = True
+                half_length = len(nodes_at_this_depth) / 2
+                count_nodes += half_length
+                nodes_visited = nodes_visited + nodes_at_this_depth[:half_length]
+            elif depth > 6:
+                found_depth = True
+                count_nodes = -1
+                depth = -1
+            else:
+                depth += 1
+                count_nodes += len(nodes_at_this_depth)
+                nodes_visited = nodes_visited + nodes_at_this_depth
+        return nodes_visited, count_nodes, depth
+
+    def get_thematic_view_node(self, thematic_view_nodes, neo4j_node):
+        for node in thematic_view_nodes:
+            if "+" in node:
+                splitted_node = node.split("+")
+                if neo4j_node in splitted_node:
+                    return node
+            elif neo4j_node == node:
+                return node
+
+    def get_list_nodes(self, list_nodes):
+        result_list = []
+        for node in list_nodes:
+            if "+" in node:
+                splitted_node = node.split("+")
+                for n in splitted_node:
+                    result_list.append(n)
+            else:
+                result_list.append(node)
+        return result_list
+
+    def split_node_and_get_random_instance(self, node_code):
+        if "+" in node_code:
+            return node_code, random.choice(node_code.split("+"))
+        else:
+            return node_code, node_code
 
     def get_best_k_for_clique(self, graph):
         k_clique_result = []
@@ -159,3 +302,6 @@ class Performance:
         for key, value in sorted(self.table_communities.iteritems(), key=lambda (k, v): (v, k), reverse=True):
             print "\t%s \t\t\t %s" % (key, value)
         print "-" * 100
+
+    def difference_list(self, l1, l2):
+        return list(set(l1) - set(l2))

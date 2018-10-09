@@ -3,6 +3,7 @@ from graph_dataset.create_dataset.neo4JHandler.neo4JObject import Transaction
 from graph_dataset.create_dataset.neo4JHandler.neo4JObject import Instance
 from graph_dataset.create_dataset.neo4JHandler.neo4JObject import Object
 from graph_dataset.create_dataset import settings as create_settings
+import random
 
 
 class Neo4JManager(Neo4JInstance):
@@ -194,3 +195,37 @@ class Neo4JManager(Neo4JInstance):
             triangle_count = result["triangleCount"]
             avg_cluster_coefficient = result["averageClusteringCoefficient"]
         return triangle_count, avg_cluster_coefficient
+
+    def get_node_by_bfs_at_distance(self, start_node, neo4j_list_nodes, distance):
+        nodes_level = []
+        end_node_found = False
+        end_node = -1
+        count_nodes = 0
+        nodes_visited = []
+        for i in range(1, distance + 1):
+            query = "MATCH(n:Instance)-[:LINKED*" + str(i) + ".." + str(i) + "]-(n2:Instance) " \
+                    "WHERE n.code='" + start_node + "' " \
+                    "RETURN n.code as code, collect(DISTINCT(n2.code)) as connected_nodes"
+            query_result = self.execute_query(query)
+            for result in query_result:
+                nodes_this_level = self.difference_list(result["connected_nodes"], nodes_visited)
+                nodes_level.append(nodes_this_level)
+                if i != distance:
+                    count_nodes += len(nodes_this_level)
+                    nodes_visited = nodes_visited + nodes_this_level
+                else:
+                    half_length = len(nodes_this_level) / 2
+                    count_nodes += half_length
+                    nodes_visited = nodes_visited + nodes_this_level[:half_length]
+        choose_from = nodes_level[distance - 1]
+        while not end_node_found:
+            end_node = random.choice(choose_from)
+            choose_from.remove(end_node)
+            if end_node in neo4j_list_nodes:
+                end_node_found = True
+            elif len(choose_from) == 0:
+                end_node_found = True
+        return nodes_visited, count_nodes, end_node
+
+    def difference_list(self, l1, l2):
+        return list(set(l1) - set(l2))

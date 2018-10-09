@@ -13,6 +13,7 @@ if __name__ == "__main__":
     performance.set_neo4j(neo)
     profiles = BuildProfiles.BuildProfiles(neo)
     profiles.start()
+    performance.set_profiles(profiles.p_content_single_instance)
     performance.get_network_characteristic()
     if settings.SUPERVISED_APPROACH:
         graph = supervised_approach.start(profiles, neo, performance)
