@@ -18,7 +18,7 @@ def start(profiles, neo, performance):
     graph = build_graph_networkx(refactor_ri, ri_connections)
     print "Thematic view has: ", graph.number_of_nodes(), " nodes and ", graph.number_of_edges(), " edges."
     colour_map = performance.get_graph_parameters_and_colors(graph, refactor_ri)
-    performance.print_table_communities()
+    performance.print_table_communities(len(graph.nodes))
     performance.get_end_time()
     # print_graph(graph, colour_map)
     return graph

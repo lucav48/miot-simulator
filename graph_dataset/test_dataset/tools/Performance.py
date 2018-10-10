@@ -74,13 +74,39 @@ class Performance:
                     for node in partition:
                         set_partition[partition[node]].append(node)
                     cluster_coefficient_cliques = self.calculate_cluster_coefficient_cliques(set_partition, graph)
+                    avg_hfindhal = self.hfindhal_index_community(set_partition)
                     print "Louvain (n_communities=" + str(size) + ")"
+                    print "Avg. Herfindhal index: ", str(avg_hfindhal)
                     print cluster_coefficient_cliques
                     self.information_flow_comparison(graph, approach_profiles)
         else:
             print "No connections in graph, I can't apply algorithms to it."
         print "-" * 100
         return colour_map
+
+    def hfindhal_index_community(self, communities):
+        i = 1
+        avg_findhal = 0
+        num_community = len(communities)
+        for community in communities:
+            hfindhal_index = 0
+            table_community = {}
+            community_nodes = self.get_list_nodes(community)
+            n_nodes = float(len(community_nodes))
+            for node in community_nodes:
+                community_node = self.profile_instances[node]["community"]
+                if community_node in table_community:
+                    table_community[community_node] = table_community[community_node] + 1
+                else:
+                    table_community[community_node] = 1
+            for n_community in table_community:
+                hfindhal_index += pow(table_community[n_community] / n_nodes, 2)
+            hfindhal_index = round(hfindhal_index, 3)
+            avg_findhal += hfindhal_index
+            # print "Community ", str(i), " Hfindhal index: ", str(hfindhal_index)
+            i += 1
+        avg_findhal = avg_findhal / num_community
+        return avg_findhal
 
     def information_flow_comparison(self, graph, approach_profiles):
         i = 0
@@ -296,11 +322,14 @@ class Performance:
             else:
                 self.table_communities[community] = 1
 
-    def print_table_communities(self):
+    def print_table_communities(self, n_nodes):
         print "Distribution nodes taken by communities"
         print "Community \t Number of nodes"
+        herfindhal_index = 0
         for key, value in sorted(self.table_communities.iteritems(), key=lambda (k, v): (v, k), reverse=True):
             print "\t%s \t\t\t %s" % (key, value)
+            herfindhal_index += round(pow((float(value) / n_nodes), 2), 3)
+        print "Herfindhal index: ", str(herfindhal_index)
         print "-" * 100
 
     def difference_list(self, l1, l2):

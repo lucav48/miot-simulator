@@ -177,11 +177,21 @@ class Neo4JManager(Neo4JInstance):
             query = "CALL algo.triangleCount('MATCH(n:Instance) WHERE n.community=\"" + str(community) + "\" " +\
                     " RETURN id(n) as id','MATCH(n1:Instance)-[:LINKED]-(n2:Instance) WHERE n1.community=\"" + str(community) + "\" "\
                     " AND n2.community=\"" + str(community) + "\" " +\
-                    " RETURN id(n1) as source, id(n2) as target',{concurrency:4, graph:'cypher'})" \
+                    " RETURN id(n1) as source, id(n2) as target',{concurrency:4, graph:'cypher'," \
+                    " clusteringCoefficientProperty:'coefficient'})" \
                     " YIELD nodeCount, triangleCount, averageClusteringCoefficient"
+            self.execute_query(query)
+            query = "MATCH(n:Instance) WHERE n.community='" + str(community) + "' RETURN n.coefficient as coefficient"
             query_result = self.execute_query(query)
+            avg_clustering = 0
+            n_nodes = 1
             for result in query_result:
-                result_as_string += str(round(result["averageClusteringCoefficient"], 3)) + "   "
+                cluster_coeff = result["coefficient"]
+                if cluster_coeff != float('inf'):
+                    avg_clustering += float(cluster_coeff)
+                    n_nodes += 1
+            avg_clustering = round(avg_clustering / n_nodes, 3)
+            result_as_string += str(avg_clustering) + "  "
         return result_as_string
 
     def get_clustering_coefficient(self):
