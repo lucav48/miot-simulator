@@ -26,16 +26,20 @@ class Performance:
 
     def get_network_characteristic(self):
         nodes, transactions, n_relation, n_iarch, n_carch, avg_neighborhood, triangle_count,\
-        avg_cluster_cofficient, list_cluster_coefficients, message_list_obj_instances = self.neo.get_network_values()
+        avg_cluster_cofficient, list_cluster_coefficients, list_density_communities, \
+        message_list_obj_instances = self.neo.get_network_values()
         print "-" * 100
         print "Network Characteristics"
         print "Nodes: ", nodes, " Relationships among instances: ", n_relation, " (i-arch: " + str(n_iarch) +\
                                                                                 " c-arch: " + str(n_carch) + \
                                                                                 ") Transactions: ", transactions
         print message_list_obj_instances
+        density = round((2 * float(n_relation)) / (nodes * (nodes - 1)), 5)
         print "Average neighborhood: ", avg_neighborhood, " Average transactions per nodes: ", round(float(transactions)/nodes, 3)
-        print "Triangle count: ", triangle_count, " Avg. cluster coefficient: ", avg_cluster_cofficient
+        print "Triangle count: ", triangle_count, " Avg. cluster coefficient: ", avg_cluster_cofficient, \
+            "Avg. density: ", str(density)
         print "Cluster coefficient for communities: ", list_cluster_coefficients
+        print "Density communities: ", list_density_communities
         print "-" * 100
 
     def get_graph_parameters_and_colors(self, graph, approach_profiles):
@@ -44,11 +48,11 @@ class Performance:
         if graph.edges:
             # k:11 ---> 2 k:17 ---> 4 k:18 ---> 4
             print "Community algorithms"
-            print "Triangles count: ", sum(list(nx.triangles(graph).values()))
-            print "Average clustering coefficient: ", nx.average_clustering(graph)
+            #print "Triangles count: ", sum(list(nx.triangles(graph).values()))
+            #print "Average clustering coefficient: ", nx.average_clustering(graph)
+            #print "Average density: ", str(nx.density(graph))
             if settings.SUPERVISED_APPROACH:
                 colour_map = ["red"] * len(graph.nodes)
-                print "Average density: ", str(nx.density(graph))
                 connected_components = nx.connected_components(graph)
                 string_component = "Components"
                 i = 1
@@ -59,15 +63,17 @@ class Performance:
                 self.information_flow_comparison(graph, approach_profiles)
             else:
                 # k_clique, k_best = self.get_best_k_for_clique(graph)
-                greedy = list(greedy_modularity_communities(graph))
+                #greedy = list(greedy_modularity_communities(graph))
                 partition = louvain_community.best_partition(graph)
 
-                if greedy:
-                    cluster_coefficient_cliques = self.calculate_cluster_coefficient_cliques(greedy, graph)
-                    colour_map, string_to_print = self.get_colour_map(greedy, graph)
-                    print string_to_print
-                    print "Greedy (n_communities=" + str(len(greedy)) + ")"
-                    print cluster_coefficient_cliques
+                # if greedy:
+                #     cluster_coefficient_cliques = self.calculate_cluster_coefficient_cliques(greedy, graph)
+                #     colour_map, string_to_print = self.get_colour_map(greedy, graph)
+                #     avg_hfindhal = self.hfindhal_index_community(greedy)
+                #     print string_to_print
+                #     print "Greedy (n_communities=" + str(len(greedy)) + ")"
+                #     print "Avg. Herfindhal index: ", str(avg_hfindhal)
+                #     print cluster_coefficient_cliques
                 if partition:
                     size = int(len(set(partition.values())))
                     set_partition = [[] for _ in range(size)]
@@ -112,6 +118,8 @@ class Performance:
         i = 0
         number_hops_original_graph = settings.DEPTH_INFORMATION_FLOW
         neo4j_list_nodes = self.get_list_nodes(graph.nodes)
+        avg_ratio_context = 0.
+        avg_ratio_nodes = 0.
         while i < settings.NUMBER_EXPERIMENT_INFORMATION_FLOW:
             # get node start thematic_view_start_node includes merged nodes, while neo4j_start_node is the single
             # instance
@@ -131,32 +139,49 @@ class Performance:
                 # apply bfs to thematic view
                 thematic_view_node_visited, thematic_view_count, thematic_view_depth = \
                     self.compute_bfs(graph, thematic_view_start_node, thematic_view_end_node)
-                # first print
-                print "-" * 100
-                print "Starting from ", thematic_view_start_node, " targeting ", thematic_view_end_node, "\n",\
-                    "\tNeo4J nodes involved: ", str(neo4j_count_nodes), "\n", \
-                    "\tThematic view node involved: ", str(thematic_view_count), "\n", \
-                    "\tNeo4J depth: ", str(number_hops_original_graph), "\n", \
-                    "\tThematic depth: ", str(thematic_view_depth)
-                print"\tNeo4J context"
-                # for each context common to source and target node, we have to count how many nodes have that
-                # context during the path and we have to divide that number for the total of nodes traversed by bfs.
-                for context in source_and_target_context:
-                    context_coefficient = self.count_nodes_with_that_context(neo4j_visited_nodes, None, context) / \
-                                          float(len(neo4j_visited_nodes))
-                    print "\tContext involved: ", context, " coefficient: ", str(round(context_coefficient, 3))
-                # same thing for graph obtained by
-                if len(thematic_view_node_visited) > 0:
-                    if not settings.SUPERVISED_APPROACH:
-                        print "\tUnsupervised context"
-                    else:
-                        print "\tSupervised context"
+                if thematic_view_count > 0:
+                    ratio_nodes = round((float(thematic_view_count) / neo4j_count_nodes), 3)
+                    avg_ratio_nodes += ratio_nodes
+                    # first print
+                    print "-" * 100
+                    print "Starting from ", thematic_view_start_node, " targeting ", thematic_view_end_node, "\n",\
+                        "\tNeo4J nodes involved: ", str(neo4j_count_nodes), "\n", \
+                        "\tThematic view node involved: ", str(thematic_view_count), "\n", \
+                        "\tRatio Thematic view / Neo4J: ", str(ratio_nodes)
+                        #"\tNeo4J depth: ", str(number_hops_original_graph), "\n", \
+                        #"\tThematic depth: ", str(thematic_view_depth)
+                    print"\tNeo4J context"
+                    # for each context common to source and target node, we have to count how many nodes have that
+                    # context during the path and we have to divide that number for the total of nodes traversed by bfs.
+                    sum_coefficient_neo4j_context = 0.
                     for context in source_and_target_context:
-                        context_coefficient = self.count_nodes_with_that_context(thematic_view_node_visited,
-                                                                                 approach_profiles, context) /\
-                                              float(len(thematic_view_node_visited))
-                        print "\tContext involved: ", context, " coefficient: ", str(round(context_coefficient, 3))
-            i += 1
+                        context_coefficient = self.count_nodes_with_that_context(neo4j_visited_nodes, None, context) / \
+                                              float(len(neo4j_visited_nodes))
+                        context_coefficient = round(context_coefficient, 3)
+                        sum_coefficient_neo4j_context += context_coefficient
+                        print "\tContext involved: ", context, " coefficient: ", str(context_coefficient)
+                    # same thing for graph obtained by
+                    if len(thematic_view_node_visited) > 0:
+                        if not settings.SUPERVISED_APPROACH:
+                            print "\tUnsupervised context"
+                        else:
+                            print "\tSupervised context"
+                        sum_coefficient_approach_context = 0.
+                        for context in source_and_target_context:
+                            context_coefficient = self.count_nodes_with_that_context(thematic_view_node_visited,
+                                                                                     approach_profiles, context) /\
+                                                  float(len(thematic_view_node_visited))
+                            context_coefficient = round(context_coefficient, 3)
+                            sum_coefficient_approach_context += context_coefficient
+                            print "\tContext involved: ", context, " coefficient: ", str(context_coefficient)
+                        ratio_context = sum_coefficient_approach_context / sum_coefficient_neo4j_context
+                        avg_ratio_context += ratio_context
+                        print "\tRatio context: ", str(round(ratio_context, 3))
+                    i += 1
+        avg_ratio_context = round(avg_ratio_context / settings.NUMBER_EXPERIMENT_INFORMATION_FLOW, 3)
+        avg_ratio_nodes = round(avg_ratio_nodes / settings.NUMBER_EXPERIMENT_INFORMATION_FLOW, 3)
+        print "Avg. Ratio nodes (thematic view / approach): ", str(avg_ratio_nodes)
+        print "Avg. Ratio context: ", str(avg_ratio_context)
 
     def count_nodes_with_that_context(self, nodes, profiles, context):
         count_nodes = 0

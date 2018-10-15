@@ -9,16 +9,17 @@ def start(profiles, neo, performance):
     q_first = utilities.define_q_first()
     ci = build_ci(profiles.p_content_single_instance, q_first)
     ri = build_ri(ci, q_first)
+    ri_length = len(ri)
     print "Topic requested: ", ', '.join(settings.TOPIC_SUPERVISED_APPROACH)
     print "Threshold to filter instances: ", str(settings.THRESHOLD_SUPERVISED)
-    print "Recall supervised Candidate instances: ", len(ci), " Filtered instances: ", len(ri)
+    print "Recall supervised Candidate instances: ", len(ci), " Filtered instances: ", ri_length
     performance.get_table_communities(ri, profiles.p_content_single_instance)
     refactor_ri, ri_connections = build_connections(ri, neo, profiles.p_content_single_instance)
     print "There are ", len(refactor_ri), " compatible to user's query."
     graph = build_graph_networkx(refactor_ri, ri_connections)
     print "Thematic view has: ", graph.number_of_nodes(), " nodes and ", graph.number_of_edges(), " edges."
     colour_map = performance.get_graph_parameters_and_colors(graph, refactor_ri)
-    performance.print_table_communities(len(graph.nodes))
+    performance.print_table_communities(ri_length)
     performance.get_end_time()
     # print_graph(graph, colour_map)
     return graph
@@ -46,6 +47,7 @@ def build_connections(nodes, neo, profile_instances):
 
 def fuse_node(nodes, f_nodes, conn, profile_instances):
     # now i fuse nodes
+    inital_number_nodes = len(nodes)
     for node in f_nodes:
         if f_nodes[node]:
             for other_node in f_nodes:
@@ -64,28 +66,50 @@ def fuse_node(nodes, f_nodes, conn, profile_instances):
         new_node = node
         new_profile = nodes[node]
         for node_to_fuse in fusing_nodes_complete[node]:
-            conn = update_connections(conn, new_node, node_to_fuse)
-            new_node = new_node + "+" + node_to_fuse
-            new_profile = utilities.sum_occurrences_dict(new_profile, nodes[node_to_fuse])
-            del nodes[node_to_fuse]
+            if node_to_fuse in nodes:
+                conn = update_connections(conn, new_node, node_to_fuse)
+                new_node = new_node + "+" + node_to_fuse
+                new_profile = utilities.sum_occurrences_dict(new_profile, nodes[node_to_fuse])
+                del nodes[node_to_fuse]
+            else:
+                search_node_already_fused = [x for x in nodes if node_to_fuse in x.split("+")]
+                if search_node_already_fused:
+                    node_to_fuse_already_fused = search_node_already_fused[0]
+                    conn = update_connections(conn, new_node, node_to_fuse_already_fused)
+                    new_node = new_node + "+" + node_to_fuse_already_fused
+                    new_profile = utilities.sum_occurrences_dict(new_profile, nodes[node_to_fuse_already_fused])
+                    del nodes[node_to_fuse_already_fused]
         del nodes[node]
         nodes[new_node] = new_profile
     # print number of nodes fused
     print "-" * 100
     cont = len(fusing_nodes_complete)
     print "Details on C-nodes fused community"
+    avg_herfindhal_index = 0.
     for node in fusing_nodes_complete:
         community = {}
-        community[profile_instances[node]["community"]] = 1
+        community[profile_instances[node]["community"]] = 1.0
+        list_node_length = len(fusing_nodes_complete[node]) + 1
         for list_node in fusing_nodes_complete[node]:
             node_community = profile_instances[list_node]["community"]
             if node_community in community:
-                community[node_community] = community[node_community] + 1
+                community[node_community] = community[node_community] + 1.0
             else:
-                community[node_community] = 1
-        print "Node: ", node, " ", community.items()
+                community[node_community] = 1.0
+        herfindhal_index = 0.
+        for community_node in community:
+            herfindhal_index += pow(community[community_node] / list_node_length, 2)
+        herfindhal_index = round(herfindhal_index, 3)
+        avg_herfindhal_index += herfindhal_index
+        # print "Node: ", node, " ", herfindhal_index, "  ", community.items()
         cont += len(fusing_nodes_complete[node])
-    print "Number of c-nodes fused: ", cont
+    avg_number_herfindhal_index = len(fusing_nodes_complete)
+    if avg_number_herfindhal_index == 0:
+        avg_number_herfindhal_index = 1
+    avg_herfindhal_index = round(avg_herfindhal_index / avg_number_herfindhal_index, 3)
+    print "Number of c-nodes fused: ", cont, " Percentage C-nodes fused: ", \
+        str(round(float(cont) / inital_number_nodes, 3))
+    print "Avg. herfindhal index: ", str(avg_herfindhal_index)
     return nodes, conn
 
 

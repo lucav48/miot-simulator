@@ -157,6 +157,7 @@ class Neo4JManager(Neo4JInstance):
             avg_neighborhood = round(row["average"], 2)
         triangle_count, avg_cluster_coefficient = self.get_clustering_coefficient()
         list_cluster_coefficients = self.get_cluster_cofficients_of_each_community()
+        list_density_communities = self.get_density_communities()
         # get number of instances according to objects
         query = "MATCH(o:Object)-[:HAS_INSTANCE]->(n:Instance) " +\
                 "WITH o.code as obj, collect(n.code) AS instances " +\
@@ -167,7 +168,23 @@ class Neo4JManager(Neo4JInstance):
             message_list_obj_instances = message_list_obj_instances + str(row["num_objects"]) + " objects has " +\
                 str(row["num_instances"]) + " instances. "
         return n_nodes, n_transactions, n_relationships, n_iarch, n_carch, avg_neighborhood, triangle_count, \
-            avg_cluster_coefficient, list_cluster_coefficients, message_list_obj_instances
+            avg_cluster_coefficient, list_cluster_coefficients, list_density_communities, message_list_obj_instances
+
+    def get_density_communities(self):
+        community_list = list(range(1, create_settings.NUMBER_OF_COMMUNITIES + 1))
+        result_as_string = ""
+        for community in community_list:
+            result_as_string += str(community) + ": "
+            query = "MATCH(n1:Instance)-[r:LINKED]-(n2:Instance) " \
+                    "WHERE n1.community = '" + str(community) + "' AND n2.community = '" + str(community) + "' " \
+                    "RETURN count(distinct(n1)) as nodes, count(r) as relationships"
+            query_result = self.execute_query(query)
+            for result in query_result:
+                nodes = result["nodes"]
+                relationships = result["relationships"]
+                density = (2.0 * relationships) / (nodes * (nodes - 1))
+                result_as_string += str(round(density, 3)) + "  "
+        return result_as_string
 
     def get_cluster_cofficients_of_each_community(self):
         community_list = list(range(1, create_settings.NUMBER_OF_COMMUNITIES + 1))
@@ -227,14 +244,15 @@ class Neo4JManager(Neo4JInstance):
                     half_length = len(nodes_this_level) / 2
                     count_nodes += half_length
                     nodes_visited = nodes_visited + nodes_this_level[:half_length]
-        choose_from = nodes_level[distance - 1]
-        while not end_node_found:
-            end_node = random.choice(choose_from)
-            choose_from.remove(end_node)
-            if end_node in neo4j_list_nodes:
-                end_node_found = True
-            elif len(choose_from) == 0:
-                end_node_found = True
+        if len(nodes_level) >= (distance - 1):
+            choose_from = nodes_level[distance - 1]
+            while not end_node_found:
+                end_node = random.choice(choose_from)
+                choose_from.remove(end_node)
+                if end_node in neo4j_list_nodes:
+                    end_node_found = True
+                elif len(choose_from) == 0:
+                    end_node_found = True
         return nodes_visited, count_nodes, end_node
 
     def difference_list(self, l1, l2):

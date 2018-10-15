@@ -93,6 +93,8 @@ def merge_instances(instances_to_merge, p_single_instance):
     merged_instances = {}
     instances = []
     community = {}
+    avg_herfindhal_index = 0.
+    num_herfindhal_index = 0
     print "Details on C-nodes fused community"
     for in_to_merge in instances_to_merge:
         if in_to_merge not in instances:
@@ -117,8 +119,17 @@ def merge_instances(instances_to_merge, p_single_instance):
                     community[community_related_instance] = community[community_related_instance] + 1
                 else:
                     community[community_related_instance] = 1
+            list_node_length = float(sum(community.values()))
+            herfindhal_index = 0.
+            for community_node in community:
+                herfindhal_index += pow(community[community_node] / list_node_length, 2)
+            herfindhal_index = round(herfindhal_index, 3)
+            avg_herfindhal_index += herfindhal_index
+            num_herfindhal_index += 1
             instances.append(in_to_merge)
             merged_instances[new_code] = new_profile
-            print "Node: ", in_to_merge, " ", community.items()
-
+            # print "Node: ", in_to_merge, " ", community.items(), " herfindhal index: ", str(herfindhal_index)
+    avg_herfindhal_index = avg_herfindhal_index / num_herfindhal_index
+    print "Avg. herfindhal index: ", str(round(avg_herfindhal_index, 3)),  " Percentage C-nodes fused: ", \
+        str(round(float(len(instances)) / len(p_single_instance), 3))
     return merged_instances, instances

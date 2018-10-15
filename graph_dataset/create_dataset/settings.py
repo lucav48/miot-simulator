@@ -1,11 +1,11 @@
 # settings of dataset to create
 LIMIT_METER_CONNECTION = 20
-NUMBER_OF_TRANSACTIONS = 5000
+NUMBER_OF_TRANSACTIONS = 21000
 PROBABILITY_TO_CHOOSE_FROM_CONTEXT_ALREADY_USED = 0.7
 NUMBER_OF_CONTENT_MESSAGES_TO_READ = 10
 # put instances you want in right place of list!
 # Example: [4, 5, 6] will create for 4 object with 1 instance, 5 object with 2 instances and 6 objects with 3 instances
-NUMBER_OF_INSTANCES = [125, 22, 9]
+NUMBER_OF_INSTANCES = [1313, 230, 90]
 NUMBER_OF_OBJECTS = sum(NUMBER_OF_INSTANCES)
 # COMMUNITY_LEADERS = [(41.17853, -8.66743), (41.15325, -8.676), (41.13944, -8.63739), (41.14151, -8.61452),
 #                     (41.1435, -8.58582), (41.16323, -8.58395), (41.17865, -8.58418), (41.18464, -8.60747),
