@@ -1,5 +1,6 @@
 from graph_dataset.test_dataset.tools import utilities
 from graph_dataset.test_dataset import settings
+from graph_dataset.create_dataset import settings as create_settings
 import networkx as nx
 import matplotlib.pyplot as plt
 
@@ -85,7 +86,7 @@ def fuse_node(nodes, f_nodes, conn, profile_instances):
     print "-" * 100
     cont = len(fusing_nodes_complete)
     print "Details on C-nodes fused community"
-    avg_herfindhal_index = 0.
+    avg_community_overall = 0.
     for node in fusing_nodes_complete:
         community = {}
         community[profile_instances[node]["community"]] = 1.0
@@ -96,20 +97,18 @@ def fuse_node(nodes, f_nodes, conn, profile_instances):
                 community[node_community] = community[node_community] + 1.0
             else:
                 community[node_community] = 1.0
-        herfindhal_index = 0.
-        for community_node in community:
-            herfindhal_index += pow(community[community_node] / list_node_length, 2)
-        herfindhal_index = round(herfindhal_index, 3)
-        avg_herfindhal_index += herfindhal_index
+        avg_community_node = float(len(community.keys())) / create_settings.NUMBER_OF_COMMUNITIES
+        avg_community_node = round(avg_community_node, 3)
+        avg_community_overall += avg_community_node
         # print "Node: ", node, " ", herfindhal_index, "  ", community.items()
         cont += len(fusing_nodes_complete[node])
-    avg_number_herfindhal_index = len(fusing_nodes_complete)
-    if avg_number_herfindhal_index == 0:
-        avg_number_herfindhal_index = 1
-    avg_herfindhal_index = round(avg_herfindhal_index / avg_number_herfindhal_index, 3)
+    number_avg_community_nodes = len(fusing_nodes_complete)
+    if number_avg_community_nodes == 0:
+        number_avg_community_nodes = 1
+    avg_community_overall = round(avg_community_overall / number_avg_community_nodes, 3)
     print "Number of c-nodes fused: ", cont, " Percentage C-nodes fused: ", \
         str(round(float(cont) / inital_number_nodes, 3))
-    print "Avg. herfindhal index: ", str(avg_herfindhal_index)
+    print "Avg. community C-node: ", str(avg_community_overall)
     return nodes, conn
 
 

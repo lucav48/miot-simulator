@@ -257,3 +257,12 @@ class Neo4JManager(Neo4JInstance):
 
     def difference_list(self, l1, l2):
         return list(set(l1) - set(l2))
+
+    def get_distribution_nodes_on_communities(self):
+        community_nodes = {}
+        for i in range(1, create_settings.NUMBER_OF_COMMUNITIES + 1):
+            query = "MATCH (n:Instance) WHERE n.community='" + str(i) + "' RETURN count(n) AS cont"
+            query_result = self.execute_query(query)
+            for result in query_result:
+                community_nodes[str(i)] = result["cont"]
+        return community_nodes

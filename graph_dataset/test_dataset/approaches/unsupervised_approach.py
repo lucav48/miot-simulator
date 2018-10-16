@@ -1,5 +1,6 @@
 from graph_dataset.test_dataset.tools import utilities
 from graph_dataset.test_dataset import settings
+from graph_dataset.create_dataset import settings as create_settings
 import networkx as nx
 import matplotlib.pyplot as plt
 
@@ -92,13 +93,13 @@ def merge_connections(connections, unsupervised_instances):
 def merge_instances(instances_to_merge, p_single_instance):
     merged_instances = {}
     instances = []
-    community = {}
-    avg_herfindhal_index = 0.
-    num_herfindhal_index = 0
+    avg_community_nodes_overall = 0.
+    avg_community_num_nodes = 0
     print "Details on C-nodes fused community"
     for in_to_merge in instances_to_merge:
         if in_to_merge not in instances:
-            community[p_single_instance[in_to_merge]["community"]] = 1
+            community = {}
+            community[p_single_instance[in_to_merge]["community"]] = 1.0
             new_code = in_to_merge
             new_profile = p_single_instance[in_to_merge].copy()
             for related_instance in instances_to_merge[in_to_merge]:
@@ -116,20 +117,18 @@ def merge_instances(instances_to_merge, p_single_instance):
                 instances.append(related_instance)
                 community_related_instance = p_single_instance[related_instance]["community"]
                 if community_related_instance in community:
-                    community[community_related_instance] = community[community_related_instance] + 1
+                    community[community_related_instance] = community[community_related_instance] + 1.0
                 else:
-                    community[community_related_instance] = 1
-            list_node_length = float(sum(community.values()))
-            herfindhal_index = 0.
-            for community_node in community:
-                herfindhal_index += pow(community[community_node] / list_node_length, 2)
-            herfindhal_index = round(herfindhal_index, 3)
-            avg_herfindhal_index += herfindhal_index
-            num_herfindhal_index += 1
+                    community[community_related_instance] = 1.0
+            # list_node_length = float(sum(community.values()))
+            avg_community_node = float(len(community.keys())) / create_settings.NUMBER_OF_COMMUNITIES
+            avg_community_node = round(avg_community_node, 3)
+            avg_community_nodes_overall += avg_community_node
+            avg_community_num_nodes += 1
             instances.append(in_to_merge)
             merged_instances[new_code] = new_profile
             # print "Node: ", in_to_merge, " ", community.items(), " herfindhal index: ", str(herfindhal_index)
-    avg_herfindhal_index = avg_herfindhal_index / num_herfindhal_index
-    print "Avg. herfindhal index: ", str(round(avg_herfindhal_index, 3)),  " Percentage C-nodes fused: ", \
-        str(round(float(len(instances)) / len(p_single_instance), 3))
+    avg_community_nodes_overall = avg_community_nodes_overall / avg_community_num_nodes
+    print "Percentage C-nodes fused: ", str(round(float(len(instances)) / len(p_single_instance), 3)),\
+        " Avg. community node: ", str(round(avg_community_nodes_overall, 3))
     return merged_instances, instances
