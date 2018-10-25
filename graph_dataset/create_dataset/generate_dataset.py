@@ -68,9 +68,10 @@ def setup_and_create_connections(list_object, travel_distances):
     for i in range(len(threads)):
         threads[i].join()
 
-    results_query = [item for sublist in results_query_list for item in sublist]
+    # results_query = [item for sublist in results_query_list for item in sublist]
     results_connections = [item for sublist in results_connections_list for item in sublist]
-    neoManager.neo4j_create_connections_query = results_query
+    shaped_connections = shape_number_c_arc(results_connections)
+    neoManager.create_connections_query(shaped_connections)
     return results_connections
 
 
@@ -90,19 +91,19 @@ def create_connections(list_instances, min_v, max_v, n_instances, travel_distanc
                     connection_type = "i"
                     if instance.community != list_instances[j].community:
                         connection_type = "c"
-                    connections_query.append(neoManager.create_query_connection(code1, code2))
+                    # connections_query.append(neoManager.create_query_connection(code1, code2))
                     connections_tuples.append((code1, code2, connection_type))
             else:
                 if travel_distances[travel_code2][travel_code1] < settings.LIMIT_METER_CONNECTION:
                     connection_type = "i"
                     if instance.community != list_instances[j].community:
                         connection_type = "c"
-                    connections_query.append(neoManager.create_query_connection(code1, code2))
+                    # connections_query.append(neoManager.create_query_connection(code1, code2))
                     connections_tuples.append((code1, code2, connection_type))
             # connected = utilities.check_two_paths(instance.travel_path, list_instances[j].travel_path)
             # if connected:
             #     connections.append(instance.code + "-" + list_instances[j].code)
-    results_query[index] = connections_query
+    # results_query[index] = connections_query
     results_connections[index] = connections_tuples
     print "Thread ", index, " finished to work."
 
@@ -241,13 +242,18 @@ def shape_number_c_arc(connections_list):
     print "Number of i-arc: ", str(len(n_iarc))
     print "Number of c-arc: ", str(len(n_carc))
     number_edges_to_delete = int(len(n_carc) - len(n_iarc) * settings.PERCENTAGE_C_ARC)
+    number_c_arc = int(len(n_iarc) * settings.PERCENTAGE_C_ARC)
     print "C-arc deleted: ", str(number_edges_to_delete)
-    for i in range(0, number_edges_to_delete):
-        delete_edge = random.choice(n_carc)
-        neoManager.delete_c_arc(delete_edge[0], delete_edge[1])
-        n_carc.remove(delete_edge)
-        connections_list.remove(delete_edge)
-    return connections_list
+    final_connections_list = n_iarc
+    carc_to_add = []
+    i = 0
+    while i < number_c_arc:
+        new_edge = random.choice(n_carc)
+        if new_edge not in carc_to_add:
+            carc_to_add.append(new_edge)
+            final_connections_list.append(new_edge)
+            i += 1
+    return final_connections_list
 
 
 def prepare_environment():
@@ -282,7 +288,6 @@ def prepare_nodes_connections(list_objects, travel_distances):
     print "Relationship creation.."
     connections_list = setup_and_create_connections(list_objects, travel_distances)
     print "Number of connections before shaping number of c-arc: ", len(connections_list)
-    connections_list = shape_number_c_arc(connections_list)
     print "Relationship created."
     return connections_list
 
