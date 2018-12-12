@@ -1,5 +1,5 @@
-from graph_dataset.test_dataset.tools import utilities
-from graph_dataset.test_dataset import settings
+from graph_dataset.thematic_views.tools import utilities
+from graph_dataset.thematic_views import settings
 from graph_dataset.create_dataset import settings as create_settings
 import networkx as nx
 import matplotlib.pyplot as plt
@@ -14,7 +14,7 @@ def start(profiles, neo, performance):
     print "Topic requested: ", ', '.join(settings.TOPIC_SUPERVISED_APPROACH)
     print "Threshold to filter instances: ", str(settings.THRESHOLD_SUPERVISED)
     print "Recall supervised Candidate instances: ", len(ci), " Filtered instances: ", ri_length
-    performance.get_table_communities(ri, profiles.p_content_single_instance)
+    # performance.get_table_communities(ri, profiles.p_content_single_instance)
     refactor_ri, ri_connections = build_connections(ri, neo, profiles.p_content_single_instance)
     print "There are ", len(refactor_ri), " compatible to user's query."
     graph = build_graph_networkx(refactor_ri, ri_connections)
@@ -22,7 +22,7 @@ def start(profiles, neo, performance):
     colour_map = performance.get_graph_parameters_and_colors(graph, refactor_ri)
     performance.print_table_communities(ri_length)
     performance.get_end_time()
-    # print_graph(graph, colour_map)
+    print_graph(graph, colour_map)
     return graph
 
 
@@ -82,7 +82,6 @@ def fuse_node(nodes, f_nodes, conn, profile_instances):
                     del nodes[node_to_fuse_already_fused]
         del nodes[node]
         nodes[new_node] = new_profile
-    # print number of nodes fused
     print "-" * 100
     cont = len(fusing_nodes_complete)
     print "Details on C-nodes fused community"

@@ -1,5 +1,5 @@
-from graph_dataset.test_dataset.tools import utilities
-from graph_dataset.test_dataset import settings
+from graph_dataset.thematic_views.tools import utilities
+from graph_dataset.thematic_views import settings
 from graph_dataset.create_dataset import settings as create_settings
 import networkx as nx
 import matplotlib.pyplot as plt
@@ -17,7 +17,7 @@ def start(profiles, neo, performance):
     unsupervised_profiles = get_profiles_of_unsupervised_instances(unsupervised_instances)
     colour_map = performance.get_graph_parameters_and_colors(graph, unsupervised_profiles)
     performance.get_end_time()
-    #print_graph(graph, colour_map)
+    print_graph(graph, colour_map)
     return graph
 
 

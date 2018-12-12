@@ -87,8 +87,7 @@ class Neo4JManager(Neo4JInstance):
                 "MATCH(n:Instance) WHERE n.code = single_node SET n.community = the_one[0].community;"
         self.neo4j_adjust_communities_query = query
 
-    def delete_c_arc(self, start_node, end_node):
-        query = "MATCH(n1:Instance)-[r:LINKED]-(n2:Instance) " +\
-                "WHERE n1.code='" + start_node + "' AND n2.code='" + end_node + "' " +\
-                "DELETE r"
-        self.neo4j_delete_c_arc_query.append(query)
+    def create_connections_query(self, shaped_connections):
+        for (start_node, end_node, _) in shaped_connections:
+            query = self.create_query_connection(start_node, end_node)
+            self.neo4j_create_connections_query.append(query)

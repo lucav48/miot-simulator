@@ -1,5 +1,5 @@
-from graph_dataset.test_dataset.tools import utilities
-from graph_dataset.test_dataset import settings
+from graph_dataset.thematic_views.tools import utilities
+from graph_dataset.thematic_views import settings
 
 
 class BuildProfiles:

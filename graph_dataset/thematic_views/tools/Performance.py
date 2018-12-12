@@ -2,7 +2,7 @@ import time
 import datetime
 import networkx as nx
 import random
-from graph_dataset.test_dataset import settings
+from graph_dataset.thematic_views import settings
 from networkx.algorithms.community.modularity_max import greedy_modularity_communities
 from networkx.algorithms.community.kclique import  k_clique_communities
 import community as louvain_community
@@ -25,7 +25,7 @@ class Performance:
         self.profile_instances = prof
 
     def get_network_characteristic(self):
-        nodes, transactions, n_relation, n_iarch, n_carch, avg_neighborhood, triangle_count,\
+        nodes, transactions, n_relation, n_iarch, n_carch, avg_neighborhood, triangle_count, \
         avg_cluster_cofficient, list_cluster_coefficients, list_density_communities, \
         message_list_obj_instances = self.neo.get_network_values()
         print "-" * 100
@@ -48,43 +48,32 @@ class Performance:
         if graph.edges:
             # k:11 ---> 2 k:17 ---> 4 k:18 ---> 4
             print "Community algorithms"
-            #print "Triangles count: ", sum(list(nx.triangles(graph).values()))
-            #print "Average clustering coefficient: ", nx.average_clustering(graph)
-            #print "Average density: ", str(nx.density(graph))
+            # print "Triangles count: ", sum(list(nx.triangles(graph).values()))
+            # print "Average clustering coefficient: ", nx.average_clustering(graph)
+            # print "Average density: ", str(nx.density(graph))
             if settings.SUPERVISED_APPROACH:
-                colour_map = ["red"] * len(graph.nodes)
-                connected_components = nx.connected_components(graph)
-                string_component = "Components"
-                i = 1
-                for component in connected_components:
-                    string_component = string_component + "\n n: " + str(i) + " length: " + str(len(component))
-                    i += 1
-                print string_component
-                self.information_flow_comparison(graph, approach_profiles)
+            #     colour_map = ["red"] * len(graph.nodes)
+            #     connected_components = nx.connected_components(graph)
+            #     string_component = "Components"
+                  i = 1
+            #     for component in connected_components:
+            #         string_component = string_component + "\n n: " + str(i) + " length: " + str(len(component))
+            #         i += 1
+            #     print string_component
+            #     self.information_flow_comparison(graph, approach_profiles)
             else:
-                # k_clique, k_best = self.get_best_k_for_clique(graph)
-                #greedy = list(greedy_modularity_communities(graph))
                 partition = louvain_community.best_partition(graph)
-
-                # if greedy:
-                #     cluster_coefficient_cliques = self.calculate_cluster_coefficient_cliques(greedy, graph)
-                #     colour_map, string_to_print = self.get_colour_map(greedy, graph)
-                #     avg_hfindhal = self.hfindhal_index_community(greedy)
-                #     print string_to_print
-                #     print "Greedy (n_communities=" + str(len(greedy)) + ")"
-                #     print "Avg. Herfindhal index: ", str(avg_hfindhal)
-                #     print cluster_coefficient_cliques
                 if partition:
                     size = int(len(set(partition.values())))
                     set_partition = [[] for _ in range(size)]
                     for node in partition:
                         set_partition[partition[node]].append(node)
-                    cluster_coefficient_cliques = self.calculate_cluster_coefficient_cliques(set_partition, graph)
-                    avg_hfindhal = self.hfindhal_index_community(set_partition)
-                    print "Louvain (n_communities=" + str(size) + ")"
-                    print "Avg. Herfindhal index: ", str(avg_hfindhal)
-                    print cluster_coefficient_cliques
-                    self.information_flow_comparison(graph, approach_profiles)
+                    # cluster_coefficient_cliques = self.calculate_cluster_coefficient_cliques(set_partition, graph)
+                    # avg_hfindhal = self.hfindhal_index_community(set_partition)
+                    # print "Louvain (n_communities=" + str(size) + ")"
+                    # print "Avg. Herfindhal index: ", str(avg_hfindhal)
+                    # print cluster_coefficient_cliques
+                    # self.information_flow_comparison(graph, approach_profiles)
         else:
             print "No connections in graph, I can't apply algorithms to it."
         print "-" * 100

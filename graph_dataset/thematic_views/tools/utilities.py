@@ -1,4 +1,4 @@
-from graph_dataset.test_dataset import settings as settings
+from graph_dataset.thematic_views import settings as settings
 import random
 import time
 import datetime
