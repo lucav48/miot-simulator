@@ -13,8 +13,8 @@ class Neo4JManager(Neo4JInstance):
         self.number_of_c_arc = self.get_network_parameter(neo4JQuery.NUMBER_OF_C_ARC)
         self.number_of_communities = self.get_network_parameter(neo4JQuery.GET_NUMBER_OF_COMMUNITIES)
 
-    def generate_transaction(self, code, start_instance, end_instance, context):
-        return TrustedTransaction.TrustedTransaction(code, start_instance, end_instance, context)
+    def generate_transaction(self, code, start_instance, end_instance, context, file_format, size):
+        return TrustedTransaction.TrustedTransaction(code, start_instance, end_instance, context, file_format, size)
 
     def get_instances_linked_to(self, start_instance):
         query = neo4JQuery.GET_INSTANCES_LINKED_TO[0] + start_instance + neo4JQuery.GET_INSTANCES_LINKED_TO[1]
