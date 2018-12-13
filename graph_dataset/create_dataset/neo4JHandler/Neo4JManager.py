@@ -7,7 +7,7 @@ class Neo4JManager(Neo4JInstance):
 
     def __init__(self):
         # get neo4j instance
-        Neo4JInstance.__init__(self)
+        # Neo4JInstance.__init__(self)
         # query to write to file
         self.neo4j_create_nodes_query = []
         self.neo4j_create_instances_query = []

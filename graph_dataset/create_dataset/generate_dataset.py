@@ -204,14 +204,18 @@ def create_instances_of_objects(object_list):
     travel_index_chosen = range(1, len(readFile.travel_array) - 1)
     num_instances = 0
     for one_object in object_list:
+        community_chosen = []
         for i in range(0, one_object.num_instances):
             # travel has to be unique among nodes
             travel_index = random.choice(travel_index_chosen)
             # travel = utilities.travel_to_dataframe(readFile.travel_array[travel_index])
             travel_index_chosen.remove(travel_index)
             instance_code = one_object.code + ":" + str(i)
-            #num_community = get_closest_community(str(travel_index), readFile)
+            # num_community = get_closest_community(str(travel_index), readFile)
             num_community = random.choice(range(1, settings.NUMBER_OF_COMMUNITIES + 1))
+            while num_community in community_chosen:
+                num_community = random.choice(range(1, settings.NUMBER_OF_COMMUNITIES + 1))
+            community_chosen.append(num_community)
             one_object.instances.append(Instance.Instance(travel_index, instance_code, num_community))
             num_instances += 1
     print "Instances of objects created: ", str(num_instances)
