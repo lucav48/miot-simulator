@@ -21,7 +21,7 @@ class Neo4JManager(Neo4JInstance):
         result_query = self.execute_query(query)
         list_instances = []
         for result in result_query:
-            list_instances.append(result["linked"])
+            list_instances.append(TrustedInstance.TrustedInstance(result["linked"], 0))
         return list_instances
 
     def read_instances(self):
@@ -43,3 +43,33 @@ class Neo4JManager(Neo4JInstance):
 
     def set_parameter(self, query):
         self.execute_query(query)
+
+    def object_in_the_same_network(self, ins1, ins2):
+        result_query = self.execute_query(neo4JQuery.shortest_path(ins1, ins2))
+        path = []
+        community = []
+        for result in result_query:
+            path = result["path"]
+        for instance in path:
+            community.append(instance["community"])
+        # if transaction passes through different network and comes back initial network
+        if community[0] == community[-1]:
+            return True
+        else:
+            return False
+
+    def get_shortest_path_instances(self, ins1, ins2):
+        result_query = self.execute_query(neo4JQuery.shortest_path(ins1, ins2))
+        pairwise_instances = []
+        path = []
+        for result in result_query:
+            path = result["path"]
+        for i in range(0, len(path) - 1):
+            pairwise_instances.append((path[i], path[i+1]))
+        return pairwise_instances
+
+    def get_community_from_instance(self, ins):
+        return self.get_network_parameter(neo4JQuery.get_community_from_instance(ins))
+
+    def get_instance_from_code(self, ins):
+        return TrustedInstance.TrustedInstance(self.get_network_parameter(neo4JQuery.get_instance_from_code(ins)), 0)

@@ -43,13 +43,37 @@ def count_transaction_parameter(list_transactions, parameter, value):
     return count
 
 
-def get_first_timestamp_in_list_transactions(start_instance, final_instance, context, file_format, list_transactions):
-    if (start_instance, final_instance) in list_transactions:
-        transaction = list_transactions[(start_instance, final_instance)][(context, file_format)]
-    else:
-        transaction = list_transactions[(final_instance, start_instance)][(context, file_format)]
+def get_first_timestamp_in_list_transactions(list_transactions):
     first_timestamp = 10e100
-    for t in transaction:
+    for t in list_transactions:
         if t.timestamp < first_timestamp:
             first_timestamp = t.timestamp
     return first_timestamp
+
+
+def is_the_same_object(ins1, ins2):
+    object1 = ins1.split(":")[0]
+    object2 = ins2.split(":")[0]
+    if object1 == object2:
+        return True
+    else:
+        return False
+
+
+def get_transactions_from_instance_same_network(neo, ins, context, file_format, list_transactions):
+    transactions = {}
+    for (start_instance, final_instance) in list_transactions:
+        if (context, file_format) in list_transactions[(start_instance, final_instance)]:
+            # other_instance = -1
+            # if start_instance == ins.code:
+            #     other_instance = final_instance
+            # elif final_instance == ins.code:
+            #     other_instance = start_instance
+            #
+            # if other_instance != -1:
+            other_instance = final_instance
+            if neo.get_community_from_instance(other_instance) == ins.community:
+                transactions[(ins.code, other_instance)] = \
+                    list_transactions[(start_instance, final_instance)][(context, file_format)]
+    return transactions
+
