@@ -73,3 +73,16 @@ class Neo4JManager(Neo4JInstance):
 
     def get_instance_from_code(self, ins):
         return TrustedInstance.TrustedInstance(self.get_network_parameter(neo4JQuery.get_instance_from_code(ins)), 0)
+
+    def check_behavioral_neighbors(self, ins1, ins2):
+        return self.get_network_parameter(neo4JQuery.check_behavioral_neighbors(ins1, ins2))
+
+    def get_number_of_communities(self):
+        return self.get_network_parameter(neo4JQuery.GET_NUMBER_OF_COMMUNITIES)
+
+    def get_instances_from_community(self, community):
+        result_query = self.execute_query(neo4JQuery.get_instances_from_community(community))
+        instances = []
+        for result in result_query:
+            instances.append(result["instances"])
+        return instances

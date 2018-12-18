@@ -2,6 +2,10 @@ from graph_dataset.create_dataset import settings as create_settings
 from graph_dataset.trust_and_reputation import settings
 import os
 import random
+import networkx as nx
+
+
+graphs = {}
 
 
 def read_context_list():
@@ -63,17 +67,18 @@ def is_the_same_object(ins1, ins2):
 def get_transactions_from_instance_same_network(neo, ins, context, file_format, list_transactions):
     transactions = {}
     for (start_instance, final_instance) in list_transactions:
-        if (context, file_format) in list_transactions[(start_instance, final_instance)]:
-            # other_instance = -1
-            # if start_instance == ins.code:
-            #     other_instance = final_instance
-            # elif final_instance == ins.code:
-            #     other_instance = start_instance
-            #
-            # if other_instance != -1:
-            other_instance = final_instance
-            if neo.get_community_from_instance(other_instance) == ins.community:
-                transactions[(ins.code, other_instance)] = \
+        if start_instance == ins and (context, file_format) in list_transactions[(start_instance, final_instance)]:
+            if neo.check_behavioral_neighbors(start_instance, final_instance):
+                transactions[(start_instance, final_instance)] = \
                     list_transactions[(start_instance, final_instance)][(context, file_format)]
     return transactions
 
+
+def get_transactions_subset(start_instance, linked_instances, context, file_format, list_transactions):
+    transactions_to_watch = {}
+    for final_instance in linked_instances:
+        if (start_instance, final_instance) in list_transactions:
+            if (context, file_format) in list_transactions[(start_instance, final_instance)]:
+                transactions_to_watch[(start_instance, final_instance)] = \
+                    list_transactions[(start_instance, final_instance)][(context, file_format)]
+    return transactions_to_watch
