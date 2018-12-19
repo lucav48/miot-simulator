@@ -53,7 +53,9 @@ class Neo4JManager(Neo4JInstance):
         for instance in path:
             community.append(instance["community"])
         # if transaction passes through different network and comes back initial network
-        if community[0] == community[-1]:
+        if len(community) == 1:
+            return True
+        elif len(community) > 1 and community[0] == community[-1]:
             return True
         else:
             return False

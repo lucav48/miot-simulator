@@ -2,8 +2,6 @@ from graph_dataset.create_dataset import settings as create_settings
 from graph_dataset.trust_and_reputation import settings
 import os
 import random
-import networkx as nx
-
 
 graphs = {}
 
@@ -20,8 +18,6 @@ def read_context_list():
 def choose_context(list_context, list_transactions, start_instance, final_instance):
     if (start_instance, final_instance) in list_transactions:
         transactions_to_watch = list_transactions[(start_instance, final_instance)]
-    elif (final_instance, start_instance) in list_transactions:
-        transactions_to_watch = list_transactions[(final_instance, start_instance)]
     else:
         return random.choice(list_context)
     harvest_context = []
