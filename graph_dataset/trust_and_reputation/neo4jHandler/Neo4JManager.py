@@ -12,28 +12,30 @@ class Neo4JManager(Neo4JInstance):
         self.number_of_i_arc = self.get_network_parameter(neo4JQuery.NUMBER_OF_I_ARC)
         self.number_of_c_arc = self.get_network_parameter(neo4JQuery.NUMBER_OF_C_ARC)
         self.number_of_communities = self.get_network_parameter(neo4JQuery.GET_NUMBER_OF_COMMUNITIES)
+        self.list_instances = self.read_instances()
 
-    def generate_transaction(self, code, start_instance, end_instance, context, file_format, size):
-        return TrustedTransaction.TrustedTransaction(code, start_instance, end_instance, context, file_format, size)
+    def generate_transaction(self, code, start_instance, end_instance, context, file_format, size, failure_rate):
+        return TrustedTransaction.TrustedTransaction(code, start_instance, end_instance,
+                                                     context, file_format, size, failure_rate)
 
     def get_instances_linked_to(self, start_instance):
         query = neo4JQuery.GET_INSTANCES_LINKED_TO[0] + start_instance + neo4JQuery.GET_INSTANCES_LINKED_TO[1]
         result_query = self.execute_query(query)
         list_instances = []
         for result in result_query:
-            list_instances.append(TrustedInstance.TrustedInstance(result["linked"], 0))
+            list_instances.append(self.list_instances[result["linked"]["code"]])
         return list_instances
 
     def read_instances(self):
         result_query = self.execute_query(neo4JQuery.GET_INSTANCES)
-        list_instances = []
+        list_instances = {}
         community_without_data_repository = [str(x) for x in range(1, self.number_of_communities + 1)]
         for instance in result_query:
             if instance["i"]["community"] in community_without_data_repository:
-                list_instances.append(TrustedInstance.TrustedInstance(instance["i"], True))
+                list_instances[instance["i"]["code"]] = TrustedInstance.TrustedInstance(instance["i"], True)
                 community_without_data_repository.remove(instance["i"]["community"])
             else:
-                list_instances.append(TrustedInstance.TrustedInstance(instance["i"], False))
+                list_instances[instance["i"]["code"]] = TrustedInstance.TrustedInstance(instance["i"], False)
         return list_instances
 
     def get_network_parameter(self, query):
@@ -74,7 +76,7 @@ class Neo4JManager(Neo4JInstance):
         return self.get_network_parameter(neo4JQuery.get_community_from_instance(ins))
 
     def get_instance_from_code(self, ins):
-        return TrustedInstance.TrustedInstance(self.get_network_parameter(neo4JQuery.get_instance_from_code(ins)), 0)
+        return self.list_instances[ins]
 
     def check_behavioral_neighbors(self, ins1, ins2):
         return self.get_network_parameter(neo4JQuery.check_behavioral_neighbors(ins1, ins2))

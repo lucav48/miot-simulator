@@ -70,11 +70,10 @@ def get_transactions_from_instance_same_network(neo, ins, context, file_format, 
     return transactions
 
 
-def get_transactions_subset(start_instance, linked_instances, context, file_format, list_transactions):
-    transactions_to_watch = {}
+def get_behavioral_neighborhood(start_instance, linked_instances, context, file_format, list_transactions):
+    behavioral_neighborhood = []
     for final_instance in linked_instances:
         if (start_instance, final_instance) in list_transactions:
             if (context, file_format) in list_transactions[(start_instance, final_instance)]:
-                transactions_to_watch[(start_instance, final_instance)] = \
-                    list_transactions[(start_instance, final_instance)][(context, file_format)]
-    return transactions_to_watch
+                behavioral_neighborhood.append(final_instance)
+    return behavioral_neighborhood

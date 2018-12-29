@@ -23,7 +23,7 @@ GET_INSTANCES = "MATCH(n:" + create_settings.NEO4J_INSTANCE_LABEL + ") RETURN DI
 
 
 GET_INSTANCES_LINKED_TO = ["MATCH(n:" + create_settings.NEO4J_INSTANCE_LABEL + ")" +
-                           "-[:" + create_settings.NEO4J_RELATION_INSTANCE_TYPE + "*1..3]-" +
+                           "-[:" + create_settings.NEO4J_RELATION_INSTANCE_TYPE + "*1]-" +
                            "(n2:" + create_settings.NEO4J_INSTANCE_LABEL + ") " +
                            "WHERE n.code = '",
                            "' RETURN DISTINCT(n2) AS linked"]
@@ -50,5 +50,5 @@ def get_instance_from_code(ins):
 
 
 def get_instances_from_community(community):
-    return "MATCH(n1:Instance)-[:LINKED]-(n2:Instance) WHERE n1.community ='" + str(community) + "' "\
-           "RETURN distinct(n1.code) AS instances"
+    return "MATCH(n:Instance) WHERE n.community ='" + str(community) + "' "\
+           "RETURN distinct(n.code) AS instances"

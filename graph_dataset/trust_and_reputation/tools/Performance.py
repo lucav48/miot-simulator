@@ -4,16 +4,37 @@ import matplotlib.pyplot as plt
 
 class Performance:
 
-    def __init__(self):
+    def __init__(self, neo):
         self.start_ts = 0
+        self.neo = neo
 
     def set_start_ts(self):
         self.start_ts = time.time()
 
     def calculate_execution_time(self):
-        print "Process lasted ", str(time.time() - self.start_ts), " seconds."
+        print "Process lasted ", str(round(time.time() - self.start_ts, 2)), " seconds."
 
-    def plot_values(self, reputation_repository):
+    def get_transactions_per_instance(self, reputation_repository, transactions):
+        dict_instances = {}
+        for community in reputation_repository:
+            dict_instances[community] = {}
+            for instance in reputation_repository[community]:
+                dict_instances[community][instance] = 0
+        for community in dict_instances:
+            for instance in dict_instances[community]:
+                for (start_instance, final_instance) in transactions:
+                    if instance == start_instance:
+                        for (context, file_format) in transactions[(start_instance, final_instance)]:
+                            dict_instances[community][instance] = dict_instances[community][instance] + \
+                                len(transactions[(start_instance, final_instance)][(context, file_format)])
+        return dict_instances
+
+    def plot_values(self, reputation_repository, transactions):
+        transactions_per_ins = self.get_transactions_per_instance(reputation_repository, transactions)
+        for community in transactions_per_ins:
+            for instance in transactions_per_ins[community]:
+                print instance, '# of transactions ', str(transactions_per_ins[community][instance]), " ", \
+                    self.neo.list_instances[instance].precision_instance
         # change key,value dictionary
         new_reputation = {}
         for community in reputation_repository:
@@ -36,8 +57,12 @@ class Performance:
                 for (context, file_format) in new_reputation[community]:
                     plt.subplot(n_rows, n_cols, i)
                     plt.gca().set_title("Context: " + context + " , " + " Format: " + file_format)
+                    # plt.bar(range(len(transactions_per_ins[community])),
+                    #         list(transactions_per_ins[community].values()),
+                    #         width=0.5, align='center', color='red', label='# transactions')
                     plt.bar(range(len(new_reputation[community][(context, file_format)])),
-                            list(new_reputation[community][(context, file_format)].values()), align='center')
+                            list(new_reputation[community][(context, file_format)].values()),
+                            width=0.5, align='edge', color='blue', label='Rep. score')
                     plt.xticks(range(len(new_reputation[community][(context, file_format)])),
                                list(new_reputation[community][(context, file_format)].keys()))
                     i += 1
@@ -51,3 +76,27 @@ class Performance:
                     n[k] = [None] * len(nested_dicts)
                 n[k][i] = v
         return n
+
+    def statistics(self, list_transactions):
+        num_success = 0.
+        num_fail = 0.
+        num_transactions = 0
+        for transaction in list_transactions:
+            for (context, file_format) in list_transactions[transaction]:
+                transaction_to_watch = list_transactions[transaction][(context, file_format)]
+                for tran in transaction_to_watch:
+                    if tran.success == 1:
+                        num_success += 1
+                    else:
+                        num_fail += 1
+                    num_transactions += 1
+        percentage_success = round(num_success / num_transactions, 3)
+        percentage_failed = round(num_fail / num_transactions, 3)
+        print "Percentage of transactions succeded: ", str(percentage_success)
+        print "Percentage of transactions failed: ", str(percentage_failed)
+
+    def print_trust(self, trust_repository):
+        for (start_instance, final_instance) in trust_repository:
+            print "\n", "Pairwise: ", (start_instance, final_instance), \
+                "\t", trust_repository[(start_instance, final_instance)], \
+                "Failure: ", self.neo.list_instances[start_instance].failure_rate_object

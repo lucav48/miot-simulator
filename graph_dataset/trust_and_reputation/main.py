@@ -11,13 +11,14 @@ first_ts = {}
 maxReputation = {}
 maxNumTranSet = {}
 maxSize = {}
+max_reputation_community = {}
 
 
-def create_transactions(neo, instances):
+def create_transactions(neo):
     list_transactions = {}
     list_context = Tools.read_context_list()
     for i in range(0, settings.NUMBER_OF_TRANSACTIONS):
-        start_instance_complete = random.choice(instances)
+        start_instance_complete = random.choice(neo.list_instances.values())
         start_instance = start_instance_complete.code
         final_instance_complete = select_destination(start_instance)
         final_instance = final_instance_complete.code
@@ -31,26 +32,29 @@ def create_transactions(neo, instances):
         have_transaction = False
         if trust_instances < settings.LIMIT_TRUST_TO_HAVE_A_TRANSACTION:
             reputation = compute_reputation_instance(neo, start_instance, start_instance_complete.community,
-                                                     context, file_format, size, list_transactions)
+                                                     context, file_format, list_transactions)
             if reputation > settings.LIMIT_REPUTATION_TO_HAVE_A_TRANSACTION:
                 have_transaction = True
         else:
             have_transaction = True
 
         if have_transaction:
-            list_transactions, success_transaction = add_new_transaction(i, start_instance, final_instance,
-                                                                         context, file_format, size, list_transactions)
+            list_transactions, success_transaction = add_new_transaction(i, start_instance, final_instance, context,
+                                                                         file_format, size,
+                                                                         final_instance_complete.precision_instance,
+                                                                         list_transactions)
             update_maxsize_and_maxnumtranset(size, context, file_format, start_instance_complete.community,
                                              success_transaction)
     return list_transactions
 
 
-def compute_reputation_instance(neo, ins, community, context, file_format, size, list_transactions):
-    compute_reputation_instances_iot(neo, str(community), context, file_format, size, list_transactions)
+def compute_reputation_instance(neo, ins, community, context, file_format, list_transactions):
+    compute_reputation_instances_iot(neo, str(community), context, file_format, list_transactions)
+    # print reputation_repository
     return reputation_repository[community][ins][(context, file_format)]
 
 
-def compute_reputation_instances_iot(neo, community, context, file_format, size, list_transactions):
+def compute_reputation_instances_iot(neo, community, context, file_format, list_transactions):
     instances_iot = neo.get_instances_from_community(community)
     reputation_vector = {}
     for instance in instances_iot:
@@ -62,34 +66,42 @@ def compute_reputation_instances_iot(neo, community, context, file_format, size,
         else:
             reputation_vector[instance] = settings.INITIAL_REPUTATION_PAGERANK
 
-    current_ts = float(time.time())
+    current_ts = time.time()
     while True:
         new_reputation = {}
         for instance in instances_iot:
-            transactions_to_watch = Tools.get_transactions_subset(instance, instances_iot,
-                                                                  context, file_format, list_transactions)
-            if transactions_to_watch:
+            behavioral_neighborhood = Tools.get_behavioral_neighborhood(instance, instances_iot,
+                                                                        context, file_format, list_transactions)
+            if behavioral_neighborhood:
                 sum_behavioral = 0.
-                for (start_instance, final_instance) in transactions_to_watch:
+                for final_instance in behavioral_neighborhood:
                     # get value from trust_repository
-                    if (final_instance, start_instance) in trust_repository:
-                        if (context, file_format) in trust_repository[(final_instance, start_instance)]:
-                            trust = trust_repository[(final_instance, start_instance)][(context, file_format)]
-                        else:
-                            trust = compute_trust_instances(neo, final_instance, start_instance, context, file_format,
-                                                            community, size, list_transactions)
-                    else:
-                        trust = compute_trust_instances(neo, final_instance, start_instance, context, file_format,
-                                                        community, size, list_transactions)
+                    trust = get_trust_instances(final_instance, instance, context, file_format)
                     rep = reputation_vector[final_instance]
-                    ts_ratio = first_ts[(start_instance, final_instance)] / current_ts
+                    ts_ratio = first_ts[instance] / current_ts
                     ts = 1 - ts_ratio
-                    sum_behavioral += trust * rep
-                mean_behavioral = sum_behavioral / len(transactions_to_watch)
-                rep_score = settings.DAMPING_FACTOR + (1 - settings.DAMPING_FACTOR) * mean_behavioral
-                new_reputation[instance] = rep_score
+                    sum_behavioral = sum_behavioral + (trust * rep)
+                mean_behavioral = sum_behavioral / len(behavioral_neighborhood)
+                # rep_score = settings.DAMPING_FACTOR + (1 - settings.DAMPING_FACTOR) * mean_behavioral
+                new_reputation[instance] = mean_behavioral
             else:
                 new_reputation[instance] = reputation_vector[instance]
+        # max di new_reputation
+        max_value = max(new_reputation.values())
+        # normalize
+        for instance in new_reputation:
+            new_reputation[instance] = new_reputation[instance] / max_value
+            new_reputation[instance] = settings.GAMMA + (1 - settings.GAMMA) * new_reputation[instance]
+        # get another max
+        max_new_reputation = 0.
+        for instance in new_reputation:
+            if new_reputation[instance] > max_new_reputation and new_reputation[instance] != 1:
+                max_new_reputation = new_reputation[instance]
+        # re normalize
+        for instance in new_reputation:
+            new_reputation[instance] = (new_reputation[instance]) * (max_new_reputation /
+                                                                     max(max_reputation_community.values()))
+        max_reputation_community[community] = max_new_reputation
         if is_converging(new_reputation, reputation_vector):
             reputation_vector = new_reputation
             break
@@ -98,17 +110,37 @@ def compute_reputation_instances_iot(neo, community, context, file_format, size,
     update_reputation_repository(community, reputation_vector, context, file_format)
 
 
+def get_trust_instances(ins_start, ins_finish, context, file_format):
+    found = False
+    trust = settings.INITIAL_TRUST_VALUE
+    if (ins_finish, ins_start) in trust_repository:
+        if (context, file_format) in trust_repository[(ins_finish, ins_start)]:
+            found = True
+            trust = trust_repository[(ins_finish, ins_start)][(context, file_format)]
+    if not found:
+        trust_repository[(ins_finish, ins_start)][(context, file_format)] = trust
+    return trust
+
+
 def update_reputation_repository(community, reputation_vector, context, file_format):
+    max_reputation = 0.
     for instance in reputation_vector:
         if instance not in reputation_repository[community]:
             reputation_repository[community][instance] = {}
-        if (context, file_format) not in maxReputation[community]:
-            maxReputation[community][(context, file_format)] = settings.INITIAL_MAX_REPUTATION
-        rep_score = reputation_vector[instance] / maxReputation[community][(context, file_format)]
-        if rep_score > maxReputation[community][(context, file_format)]:
-            maxReputation[community][(context, file_format)] = rep_score
+        if reputation_vector[instance] > max_reputation:
+            max_reputation = reputation_vector[instance]
+
+    for instance in reputation_vector:
+        rep_score = reputation_vector[instance]
         reputation_repository[community][instance][(context, file_format)] = rep_score
 
+    #     if reputation_vector[instance] > max_reputation:
+    #         max_reputation = reputation_vector[instance]
+    # for instance in reputation_vector:
+    #     rep_score = reputation_vector[instance] #/ max_reputation
+    #     if instance not in reputation_repository[community]:
+    #         reputation_repository[community][instance] = {}
+    #     reputation_repository[community][instance][(context, file_format)] = rep_score
 
 
 def is_converging(d1, d2):
@@ -153,7 +185,6 @@ def compute_trust_instances_same_network(start_instance, final_instance, context
         transet_fraction_den = float(maxNumTranSet[community][(context, file_format)])
     transet_fraction = len(transactions_to_watch) / transet_fraction_den
     size_fraction = size / float(maxSize[community][(context, file_format)])
-    # print success_fraction, " ", transet_fraction, " ", size_fraction
     trust_score = (settings.ALPHA * success_fraction +
                    settings.BETA * transet_fraction +
                    settings.GAMMA * size_fraction) / \
@@ -187,8 +218,10 @@ def compute_trust_instance_different_network(shortest_path, context, file_format
     return trust_score
 
 
-def add_new_transaction(code, start_instance, final_instance, context, file_format, size, list_transactions):
-    new_transaction = neo.generate_transaction(code, start_instance, final_instance, context, file_format, size)
+def add_new_transaction(code, start_instance, final_instance, context, file_format, size,
+                        precision_instance, list_transactions):
+    new_transaction = neo.generate_transaction(code, start_instance, final_instance, context, file_format,
+                                               size, precision_instance)
     if (start_instance, final_instance) not in list_transactions:
         list_transactions[(start_instance, final_instance)] = {}
         list_transactions[(start_instance, final_instance)][(context, file_format)] = [new_transaction]
@@ -198,8 +231,8 @@ def add_new_transaction(code, start_instance, final_instance, context, file_form
         else:
             list_transactions[(start_instance, final_instance)][(context, file_format)].append(new_transaction)
     # update first ts
-    if (start_instance, final_instance) not in first_ts:
-        first_ts[(start_instance, final_instance)] = time.time()
+    if start_instance not in first_ts:
+        first_ts[start_instance] = time.time()
     return list_transactions, new_transaction.success
 
 
@@ -236,8 +269,8 @@ def setup_maxnumtranset_and_maxsize(number_of_communities):
     for i in range(1, number_of_communities + 1):
         maxNumTranSet[str(i)] = {}
         maxSize[str(i)] = {}
-        maxReputation[str(i)] = {}
         reputation_repository[str(i)] = {}
+        max_reputation_community[str(i)] = 1.
 
 
 if __name__ == "__main__":
@@ -245,12 +278,14 @@ if __name__ == "__main__":
     neo = Neo4JManager.Neo4JManager()
     print "Setup environment.."
     setup_maxnumtranset_and_maxsize(neo.number_of_communities)
-    performance = Performance.Performance()
-    instances = neo.read_instances()
+    performance = Performance.Performance(neo)
     performance.set_start_ts()
     print "Creating transactions..."
-    transactions = create_transactions(neo, instances)
+    transactions = create_transactions(neo)
     print "Script finished."
     performance.calculate_execution_time()
-    performance.plot_values(reputation_repository)
+    performance.statistics(transactions)
+    print max_reputation_community
+    # performance.print_trust(trust_repository)
+    performance.plot_values(reputation_repository, transactions)
     print ""
