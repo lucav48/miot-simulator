@@ -1,5 +1,6 @@
 import time
 import matplotlib.pyplot as plt
+import trust_and_reputation_functions
 
 
 class Performance:
@@ -100,3 +101,16 @@ class Performance:
             print "\n", "Pairwise: ", (start_instance, final_instance), \
                 "\t", trust_repository[(start_instance, final_instance)], \
                 "Failure: ", self.neo.list_instances[start_instance].failure_rate_object
+
+    def list_network_trusts(self, neo, trust_repository):
+        objects_with_instances = neo.read_objects_with_instances()
+        trust_objects = trust_and_reputation_functions.compute_trust_objects(objects_with_instances, trust_repository)
+        overall_trust_iots = trust_and_reputation_functions.compute_overall_trust_iots(neo, trust_objects)
+        trust_objects_to_iot = trust_and_reputation_functions.compute_trust_object_to_iot(neo, objects_with_instances,
+                                                                                          trust_repository,
+                                                                                          overall_trust_iots)
+        reputation_object = trust_and_reputation_functions.compute_reputation_objects_in_miot(objects_with_instances,
+                                                                                              trust_repository)
+        trust_and_reputation_functions.compute_reputation_iot_in_miot(objects_with_instances, reputation_object,
+                                                                      neo)
+        print ""

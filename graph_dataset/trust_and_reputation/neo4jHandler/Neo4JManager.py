@@ -26,6 +26,13 @@ class Neo4JManager(Neo4JInstance):
             list_instances.append(self.list_instances[result["linked"]["code"]])
         return list_instances
 
+    def read_objects_with_instances(self):
+        objects = {}
+        result_query = self.execute_query(neo4JQuery.GET_OBJECTS_WITH_INSTANCES)
+        for result in result_query:
+            objects[result["obj"]] = result["instances"]
+        return objects
+
     def read_instances(self):
         result_query = self.execute_query(neo4JQuery.GET_INSTANCES)
         list_instances = {}
@@ -90,3 +97,6 @@ class Neo4JManager(Neo4JInstance):
         for result in result_query:
             instances.append(result["instances"])
         return instances
+
+    def get_objects_from_community(self, community):
+        return self.get_network_parameter(neo4JQuery.get_objects_from_community(community))

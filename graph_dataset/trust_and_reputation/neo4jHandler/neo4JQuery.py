@@ -30,6 +30,11 @@ GET_INSTANCES_LINKED_TO = ["MATCH(n:" + create_settings.NEO4J_INSTANCE_LABEL + "
 
 GET_NUMBER_OF_COMMUNITIES = "MATCH(n:Instance) RETURN COUNT(DISTINCT(n.community)) AS " + FIELD_PARAMETER
 
+GET_OBJECTS = "MATCH(o:Object) RETURN COLLECT(o.code) AS " + FIELD_PARAMETER
+
+GET_OBJECTS_WITH_INSTANCES = "MATCH(o:Object)-[:HAS_INSTANCE]-(n:Instance) RETURN o.code AS obj, " \
+                             "COLLECT(n.code) AS instances"
+
 
 def check_behavioral_neighbors(ins1, ins2):
     return "MATCH(n1:Instance)-[:LINKED*1]-(n2:Instance) " \
@@ -52,3 +57,9 @@ def get_instance_from_code(ins):
 def get_instances_from_community(community):
     return "MATCH(n:Instance) WHERE n.community ='" + str(community) + "' "\
            "RETURN distinct(n.code) AS instances"
+
+
+def get_objects_from_community(community):
+    return "MATCH(o:Object)-[:HAS_INSTANCE]->(n:Instance) " \
+           "WHERE n.community = '" + community + "' " \
+            "RETURN COLLECT(o.code) AS " + FIELD_PARAMETER

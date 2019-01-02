@@ -95,7 +95,7 @@ def compute_reputation_instances_iot(neo, community, context, file_format, list_
         # get another max
         max_new_reputation = 0.
         for instance in new_reputation:
-            if new_reputation[instance] > max_new_reputation and new_reputation[instance] != 1:
+            if new_reputation[instance] > max_new_reputation and new_reputation[instance] != settings.INITIAL_REPUTATION_PAGERANK:
                 max_new_reputation = new_reputation[instance]
         # re normalize
         for instance in new_reputation:
@@ -287,5 +287,6 @@ if __name__ == "__main__":
     performance.statistics(transactions)
     print max_reputation_community
     # performance.print_trust(trust_repository)
-    performance.plot_values(reputation_repository, transactions)
+    # performance.plot_values(reputation_repository, transactions)
+    performance.list_network_trusts(neo, trust_repository)
     print ""
