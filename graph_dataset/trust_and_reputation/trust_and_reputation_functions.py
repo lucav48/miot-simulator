@@ -1,4 +1,5 @@
 from graph_dataset.trust_and_reputation import settings
+from graph_dataset.trust_and_reputation.tools import Tools
 
 
 def compute_trust_objects(list_objects, trust_repository):
@@ -58,7 +59,7 @@ def compute_reputation_objects_in_miot(list_objects, trust_repository):
                                                       (1 - settings.DAMPING_FACTOR) * (mean_values[(context, file_format)] /
                                                                                        (occurrences[(context, file_format)] * len(obj_instances)))
             new_reputation[obj] = mean_values
-        if is_converging(new_reputation, actual_reputation):
+        if Tools.is_converging(new_reputation, actual_reputation):
             break
         else:
             actual_reputation = new_reputation
@@ -76,24 +77,6 @@ def compute_reputation_objects_in_miot(list_objects, trust_repository):
             new_reputation[obj][context_file_format] = new_reputation[obj][context_file_format] / \
                                                        max_values[context_file_format]
     return new_reputation
-
-
-def is_converging(rep1, rep2):
-    for obj in rep1:
-        for context_file_format in rep1[obj]:
-            if abs(rep1[obj][context_file_format] - rep2[obj][context_file_format]) > settings.CONVERGENCE_PAGERANK:
-                return False
-    return True
-
-
-def get_contexts_used(trust_repository):
-    list_context = []
-    for instances in trust_repository:
-        context_instances = trust_repository[instances].keys()
-        for context_file_format in context_instances:
-            if context_file_format not in list_context:
-                list_context.append(context_file_format)
-    return list_context
 
 
 def get_behavioral_neighborhood(ins, pairwise_instances):

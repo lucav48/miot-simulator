@@ -13,10 +13,10 @@ class TrustedInstance(Instance):
         #                                         settings.PERCENTAGE_FAILURE_TRANSACTIONS_OBJECT[1]), 3)
 
     def get_precision_instance(self):
-        pos = random.choice(range(0, len(settings.OBJECTS)))
-        while settings.OBJECTS[pos] == 0:
-            pos = random.choice(range(0, len(settings.OBJECTS)))
-        settings.OBJECTS[pos] -= 1
+        pos = random.choice(range(0, len(settings.INSTANCES)))
+        while settings.INSTANCES[pos] == 0:
+            pos = random.choice(range(0, len(settings.INSTANCES)))
+        settings.INSTANCES[pos] -= 1
         if pos == 0:
             return round(random.uniform(0, 0.1), 3)
         elif pos == 1:

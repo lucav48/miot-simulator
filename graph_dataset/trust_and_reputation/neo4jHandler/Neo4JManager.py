@@ -56,15 +56,13 @@ class Neo4JManager(Neo4JInstance):
     def object_in_the_same_network(self, ins1, ins2):
         result_query = self.execute_query(neo4JQuery.shortest_path(ins1, ins2))
         path = []
-        community = []
+        community = set()
         for result in result_query:
             path = result["path"]
         for instance in path:
-            community.append(instance["community"])
+            community.add(instance["community"])
         # if transaction passes through different network and comes back initial network
         if len(community) == 1:
-            return True
-        elif len(community) > 1 and community[0] == community[-1]:
             return True
         else:
             return False

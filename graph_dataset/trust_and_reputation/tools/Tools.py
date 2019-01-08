@@ -77,3 +77,20 @@ def get_behavioral_neighborhood(start_instance, linked_instances, context, file_
             if (context, file_format) in list_transactions[(start_instance, final_instance)]:
                 behavioral_neighborhood.append(final_instance)
     return behavioral_neighborhood
+
+
+def linked_by_strange_path(neo, start_instance, final_instance):
+    shortest_path = neo.get_shortest_path_instances(start_instance, final_instance)
+    start_community = neo.get_community_from_instance(start_instance)
+    final_community = neo.get_community_from_instance(final_instance)
+    if start_community == final_community and len(shortest_path) > 1:
+        return True
+    else:
+        return False
+
+
+def is_converging(d1, d2):
+    for key in d1:
+        if abs(d1[key] - d2[key]) > settings.CONVERGENCE_PAGERANK:
+            return False
+    return True
