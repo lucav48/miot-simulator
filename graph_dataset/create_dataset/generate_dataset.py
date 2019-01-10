@@ -111,7 +111,8 @@ def create_connections(list_instances, min_v, max_v, n_instances, travel_distanc
 def get_all_context():
     list_context = dict()
     for x in os.listdir(settings.CONTEXT_FOLDER):
-        list_context[x.split(settings.SUFFIX_CONTEXT_FILE)[0]] = []
+        if os.path.isfile(x):
+            list_context[x.split(settings.SUFFIX_CONTEXT_FILE)[0]] = []
     return list_context
 
 
@@ -250,13 +251,14 @@ def shape_number_c_arc(connections_list):
     print "C-arc deleted: ", str(number_edges_to_delete)
     final_connections_list = n_iarc
     carc_to_add = []
-    i = 0
-    while i < number_c_arc:
-        new_edge = random.choice(n_carc)
-        if new_edge not in carc_to_add:
-            carc_to_add.append(new_edge)
-            final_connections_list.append(new_edge)
-            i += 1
+    if n_carc:
+        i = 0
+        while i < number_c_arc:
+            new_edge = random.choice(n_carc)
+            if new_edge not in carc_to_add:
+                carc_to_add.append(new_edge)
+                final_connections_list.append(new_edge)
+                i += 1
     return final_connections_list
 
 

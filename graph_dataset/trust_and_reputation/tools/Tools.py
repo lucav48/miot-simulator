@@ -94,3 +94,11 @@ def is_converging(d1, d2):
         if abs(d1[key] - d2[key]) > settings.CONVERGENCE_PAGERANK:
             return False
     return True
+
+
+def get_behavioral_neighborhood_from_path(ins, pairwise_instances):
+    neighborhood = []
+    for (start_instance, final_instance) in pairwise_instances:
+        if ins == start_instance:
+            neighborhood.append(final_instance)
+    return neighborhood

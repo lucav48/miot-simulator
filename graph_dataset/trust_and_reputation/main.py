@@ -43,6 +43,7 @@ def select_destination(start_instance):
     while destination_instance.code == start_instance or \
             Tools.is_the_same_object(start_instance, destination_instance.code) or \
             Tools.linked_by_strange_path(neo, start_instance, destination_instance.code):
+        linked_instances_code.remove(destination_instance)
         destination_instance = random.choice(linked_instances_code)
     return destination_instance
 
@@ -70,6 +71,6 @@ if __name__ == "__main__":
     performance.calculate_execution_time()
     performance.statistics(transactionComputation.list_transactions)
     # performance.print_trust(trust_repository)
-    performance.plot_values(reputationComputation.reputation_repository)
-    performance.list_network_trusts(trustComputation.trust_repository)
+    # performance.plot_values(reputationComputation.reputation_repository)
+    # performance.list_network_trusts(trustComputation, reputationComputation)
     print ""

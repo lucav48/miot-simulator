@@ -12,6 +12,7 @@ class Neo4JManager(Neo4JInstance):
         self.number_of_i_arc = self.get_network_parameter(neo4JQuery.NUMBER_OF_I_ARC)
         self.number_of_c_arc = self.get_network_parameter(neo4JQuery.NUMBER_OF_C_ARC)
         self.number_of_communities = self.get_network_parameter(neo4JQuery.GET_NUMBER_OF_COMMUNITIES)
+        self.objects_with_instances = self.read_objects_with_instances()
         self.list_instances = self.read_instances()
 
     def generate_transaction(self, code, start_instance, end_instance, context, file_format, size, failure_rate):
