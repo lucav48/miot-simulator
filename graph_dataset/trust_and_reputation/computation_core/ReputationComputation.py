@@ -109,8 +109,8 @@ class ReputationComputation:
                     if c_f_f not in self.reputation_iot[instance_community]:
                         self.reputation_iot[instance_community][c_f_f] = 0.
                         occurrences[instance_community][c_f_f] = 0
-                        self.reputation_iot[instance_community][c_f_f] = self.reputation_iot[instance_community][c_f_f] + \
-                                                                         self.reputation_object[obj][c_f_f]
+                    self.reputation_iot[instance_community][c_f_f] = self.reputation_iot[instance_community][c_f_f] + \
+                                                                     self.reputation_object[obj][c_f_f]
                     occurrences[instance_community][c_f_f] = occurrences[instance_community][c_f_f] + 1
         for community in self.reputation_iot:
             for c_f_f in self.reputation_iot[community]:
@@ -139,20 +139,15 @@ class ReputationComputation:
                                     mean_values[(context, file_format)] = 0.
                                     occurrences[(context, file_format)] = 0
                                 if (context, file_format) not in actual_reputation[neighbor_object]:
-                                    actual_reputation[neighbor_object][
-                                        (context, file_format)] = settings.INITIAL_REPUTATION_PAGERANK
+                                    actual_reputation[neighbor_object][(context, file_format)] = settings.INITIAL_REPUTATION_PAGERANK
                                 mean_values[(context, file_format)] = mean_values[(context, file_format)] + \
-                                                                      self.trust_core.trust_repository[(neighbor, instance)][
-                                                                          (context, file_format)] * \
-                                                                      actual_reputation[neighbor_object][
-                                                                          (context, file_format)]
+                                                                      self.trust_core.trust_repository[(neighbor, instance)][(context, file_format)] * \
+                                                                      actual_reputation[neighbor_object][(context, file_format)]
                                 occurrences[(context, file_format)] = occurrences[(context, file_format)] + 1
                 for (context, file_format) in mean_values:
                     mean_values[(context, file_format)] = settings.DAMPING_FACTOR + \
-                                                          (1 - settings.DAMPING_FACTOR) * (
-                                                                      mean_values[(context, file_format)] /
-                                                                      (occurrences[(context, file_format)] * len(
-                                                                          obj_instances)))
+                                                          (1 - settings.DAMPING_FACTOR) * (mean_values[(context, file_format)] /
+                                                                                           (occurrences[(context, file_format)] * len(obj_instances)))
                 new_reputation[obj] = mean_values
             if Tools.is_converging(new_reputation, actual_reputation):
                 break
