@@ -123,8 +123,8 @@ class TrustComputation:
                                         trust_objects_to_iot[obj][str(community)][cff] = 0.
                                         occurrences[cff] = 0
                                     trust_objects_to_iot[obj][str(community)][cff] = \
-                                    trust_objects_to_iot[obj][str(community)][cff] + \
-                                    self.trust_repository[(obj_instance, instance)][cff]
+                                        trust_objects_to_iot[obj][str(community)][cff] + \
+                                        self.trust_repository[(obj_instance, instance)][cff]
                                     occurrences[cff] = occurrences[cff] + 1
                     for cff in occurrences:
                         trust_objects_to_iot[obj][str(community)][cff] = trust_objects_to_iot[obj][str(community)][
@@ -132,6 +132,7 @@ class TrustComputation:
                                                                          occurrences[cff]
                 else:
                     index_to_fill.append((obj, str(community)))
+        # compute trust to iots from the point of view of objects that have no instance in those iots.
         for (obj, community_to_trust) in index_to_fill:
             list_instances = objects_with_instances[obj]
             trust_obj = {}

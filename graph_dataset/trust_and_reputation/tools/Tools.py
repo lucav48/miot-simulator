@@ -99,6 +99,6 @@ def is_converging(d1, d2):
 def get_behavioral_neighborhood_from_path(ins, pairwise_instances):
     neighborhood = []
     for (start_instance, final_instance) in pairwise_instances:
-        if ins == start_instance:
-            neighborhood.append(final_instance)
+        if ins == final_instance:
+            neighborhood.append(start_instance)
     return neighborhood
