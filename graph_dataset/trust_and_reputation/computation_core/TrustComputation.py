@@ -90,14 +90,14 @@ class TrustComputation:
     def get_trust_instances(self, ins_start, ins_finish, context, file_format):
         found = False
         trust = settings.INITIAL_TRUST_VALUE
-        if (ins_finish, ins_start) in self.trust_repository:
-            if (context, file_format) in self.trust_repository[(ins_finish, ins_start)]:
+        if (ins_start, ins_finish) in self.trust_repository:
+            if (context, file_format) in self.trust_repository[(ins_start, ins_finish)]:
                 found = True
-                trust = self.trust_repository[(ins_finish, ins_start)][(context, file_format)]
+                trust = self.trust_repository[(ins_start, ins_finish)][(context, file_format)]
         if not found:
-            if (ins_finish, ins_start) not in self.trust_repository:
-                self.trust_repository[(ins_finish, ins_start)] = {}
-                self.trust_repository[(ins_finish, ins_start)][(context, file_format)] = trust
+            if (ins_start, ins_finish) not in self.trust_repository:
+                self.trust_repository[(ins_start, ins_finish)] = {}
+                self.trust_repository[(ins_start, ins_finish)][(context, file_format)] = trust
         return trust
 
     def compute_trust_object_to_iot(self):

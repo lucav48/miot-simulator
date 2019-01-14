@@ -11,7 +11,6 @@ class ReputationComputation:
         self.trust_core = trust_computation_instance
         self.reputation_repository = {}
         self.max_reputation_community = {}
-        self.reputation_repository = {}
         self.reputation_object = {}
         self.reputation_iot = {}
         self.max_reputation_community = {}
@@ -23,8 +22,8 @@ class ReputationComputation:
             self.max_reputation_community[str(i)] = 1.
 
     def compute_reputation_instance(self, ins, community, context, file_format):
-        self.compute_reputation_instances_iot(str(community), context, file_format)
-        # print reputation_repository
+        reputation_vector = self.compute_reputation_instances_iot(str(community), context, file_format)
+        self.update_reputation_repository(community, reputation_vector, context, file_format)
         return self.reputation_repository[community][ins][(context, file_format)]
 
     def compute_reputation_instances_iot(self, community, context, file_format):
@@ -45,18 +44,18 @@ class ReputationComputation:
         while True:
             new_reputation = {}
             for instance in instances_iot:
-                behavioral_neighborhood = Tools.get_behavioral_neighborhood(instance, instances_iot,
-                                                                            context, file_format, list_transactions)
-                if behavioral_neighborhood:
+                behavioral_neighborhood_input = Tools.get_behavioral_neighborhood_in(instance, instances_iot,
+                                                                                     context, file_format, list_transactions)
+                if behavioral_neighborhood_input:
                     sum_behavioral = 0.
-                    for final_instance in behavioral_neighborhood:
+                    for final_instance in behavioral_neighborhood_input:
                         # get value from trust_repository
                         trust = self.trust_core.get_trust_instances(final_instance, instance, context, file_format)
                         rep = reputation_vector[final_instance]
-                        ts_ratio = self.transaction_core.first_ts[instance] / current_ts
+                        ts_ratio = self.transaction_core.first_ts[final_instance] / current_ts
                         ts = 1 - ts_ratio
                         sum_behavioral = sum_behavioral + (trust * rep * ts)
-                    mean_behavioral = sum_behavioral / len(behavioral_neighborhood)
+                    mean_behavioral = sum_behavioral / len(behavioral_neighborhood_input)
                     new_reputation[instance] = mean_behavioral
                 else:
                     new_reputation[instance] = reputation_vector[instance]
@@ -74,6 +73,8 @@ class ReputationComputation:
                 if new_reputation[instance] > max_new_reputation and \
                         new_reputation[instance] != settings.INITIAL_REPUTATION_PAGERANK:
                     max_new_reputation = new_reputation[instance]
+            if max_new_reputation == 0:
+                max_new_reputation = 1.
             # re normalize
             max_rep_community = max(self.max_reputation_community.values())
             if max_rep_community == 0:
@@ -86,7 +87,7 @@ class ReputationComputation:
                 break
             else:
                 reputation_vector = new_reputation
-        self.update_reputation_repository(community, reputation_vector, context, file_format)
+        return reputation_vector
 
     def update_reputation_repository(self, community, reputation_vector, context, file_format):
         for instance in reputation_vector:

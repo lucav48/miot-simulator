@@ -70,11 +70,11 @@ def get_transactions_from_instance_same_network(neo, ins, context, file_format, 
     return transactions
 
 
-def get_behavioral_neighborhood(start_instance, linked_instances, context, file_format, list_transactions):
+def get_behavioral_neighborhood_in(start_instance, linked_instances, context, file_format, list_transactions):
     behavioral_neighborhood = []
     for final_instance in linked_instances:
-        if (start_instance, final_instance) in list_transactions:
-            if (context, file_format) in list_transactions[(start_instance, final_instance)]:
+        if (final_instance, start_instance) in list_transactions:
+            if (context, file_format) in list_transactions[(final_instance, start_instance)]:
                 behavioral_neighborhood.append(final_instance)
     return behavioral_neighborhood
 
