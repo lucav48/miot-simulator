@@ -8,6 +8,7 @@ class TrustComputation:
         self.trust_repository = {}
         self.trust_object = {}
         self.overall_trust_iots = {}
+        self.mean_trust = {}
         self.transaction_core = transaction_computation_instance
 
     def compute_trust_instances(self, start_instance, final_instance, context, file_format, size, community):
@@ -85,7 +86,11 @@ class TrustComputation:
     def update_trust_repository(self, start_instance, final_instance, context, file_format, trust_instances):
         if (start_instance, final_instance) not in self.trust_repository:
             self.trust_repository[(start_instance, final_instance)] = {}
+            self.mean_trust[(start_instance, final_instance)] = {}
+        if (context, file_format) not in self.mean_trust[(start_instance, final_instance)]:
+            self.mean_trust[(start_instance, final_instance)][(context, file_format)] = []
         self.trust_repository[(start_instance, final_instance)][(context, file_format)] = trust_instances
+        self.mean_trust[(start_instance, final_instance)][(context, file_format)].append(trust_instances)
 
     def get_trust_instances(self, ins_start, ins_finish, context, file_format):
         found = False

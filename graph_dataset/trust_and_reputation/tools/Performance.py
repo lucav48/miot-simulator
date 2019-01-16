@@ -110,3 +110,15 @@ class Performance:
         reputationComputation.compute_reputation_objects_in_miot()
         reputationComputation.compute_reputation_iot_in_miot()
         print ""
+
+    def mean_values(self, values):
+        means = {}
+        for index_1 in values:
+            means[index_1] = 0.
+            occurrences = 0
+            for c_f_f in values[index_1]:
+                for element in values[index_1][c_f_f]:
+                    means[index_1] = means[index_1] + element
+                    occurrences += 1
+            means[index_1] = means[index_1] / occurrences
+        return means

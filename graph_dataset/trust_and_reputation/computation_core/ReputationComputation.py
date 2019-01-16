@@ -9,6 +9,7 @@ class ReputationComputation:
         self.neo = neo
         self.transaction_core = transaction_computation_instance
         self.trust_core = trust_computation_instance
+        self.mean_reputation = {}
         self.reputation_repository = {}
         self.max_reputation_community = {}
         self.reputation_object = {}
@@ -93,7 +94,11 @@ class ReputationComputation:
         for instance in reputation_vector:
             if instance not in self.reputation_repository[community]:
                 self.reputation_repository[community][instance] = {}
+                self.mean_reputation[instance] = {}
+            if (context, file_format) not in self.mean_reputation[instance]:
+                self.mean_reputation[instance][(context, file_format)] = []
             self.reputation_repository[community][instance][(context, file_format)] = reputation_vector[instance]
+            self.mean_reputation[instance][(context, file_format)].append(reputation_vector[instance])
 
     def compute_reputation_iot_in_miot(self):
         number_of_communities = self.neo.number_of_communities

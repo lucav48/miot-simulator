@@ -17,10 +17,9 @@ def create_transactions(neo, transactionComputation, trustComputation, reputatio
         context = Tools.choose_context(list_context, transactionComputation.list_transactions, start_instance.code, final_instance.code)
         # get format and size
         file_format, size = Tools.choose_transaction_format_and_size()
-        trust_instances = 0.3
-        # \
-        #     round(trustComputation.compute_trust_instances(start_instance.code, final_instance.code, context,
-        #                                                    file_format, size, start_instance.community), 3)
+        trust_instances = \
+            round(trustComputation.compute_trust_instances(start_instance.code, final_instance.code, context,
+                                                           file_format, size, start_instance.community), 3)
         have_transaction = False
         if trust_instances < settings.LIMIT_TRUST_TO_HAVE_A_TRANSACTION:
             reputation = reputationComputation.compute_reputation_instance(start_instance.code,
@@ -70,9 +69,10 @@ if __name__ == "__main__":
     create_transactions(neo, transactionComputation, trustComputation, reputationComputation)
     print "Script finished."
     performance.calculate_execution_time()
-    print reputationComputation.reputation_repository
+    print performance.mean_values(trustComputation.mean_trust)
+    print performance.mean_values(reputationComputation.mean_reputation)
     # performance.statistics(transactionComputation.list_transactions)
     # performance.print_trust(trust_repository)
-    performance.plot_values(reputationComputation.reputation_repository)
+    # performance.plot_values(reputationComputation.reputation_repository)
     # performance.list_network_trusts(trustComputation, reputationComputation)
     print ""
