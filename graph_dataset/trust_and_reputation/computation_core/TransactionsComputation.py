@@ -11,12 +11,13 @@ class TransactionsComputation:
         self.first_ts = {}
         self.setup_maxnumtranset_and_maxsize()
 
-    def update_maxsize_and_maxnumtranset(self, new_size, context, file_format, community, success_transaction):
+    def update_maxsize_and_maxnumtranset(self, community, context, file_format, number_of_transactions, new_size,  success_transaction):
         if success_transaction == 1:
             if (context, file_format) not in self.maxNumTranSet[community]:
-                self.maxNumTranSet[community][(context, file_format)] = 1
+                self.maxNumTranSet[community][(context, file_format)] = number_of_transactions
             else:
-                self.maxNumTranSet[community][(context, file_format)] = self.maxNumTranSet[community][(context, file_format)] + 1
+                if self.maxNumTranSet[community][(context, file_format)] < number_of_transactions:
+                    self.maxNumTranSet[community][(context, file_format)] = number_of_transactions
 
         if (context, file_format) not in self.maxSize[community]:
             self.maxSize[community][(context, file_format)] = new_size
@@ -45,5 +46,6 @@ class TransactionsComputation:
         # update first ts
         if start_instance not in self.first_ts:
             self.first_ts[start_code] = time.time()
-        self.update_maxsize_and_maxnumtranset(size, context, file_format, start_instance.community,
-                                              new_transaction.success)
+        number_transactions = len(self.list_transactions[(start_instance.code, final_instance.code)][(context, file_format)])
+        self.update_maxsize_and_maxnumtranset(start_instance.community, context, file_format, number_transactions,
+                                              size, new_transaction.success)

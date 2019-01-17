@@ -63,15 +63,23 @@ def get_instance_classes():
 if __name__ == "__main__":
     print "Script started."
     print "Setup environment.."
+    print "-" * 100
+    print "Parameters of simulation"
+    print "Number of transactions: ", settings.NUMBER_OF_TRANSACTIONS
+    print "Damping factor: ", settings.DAMPING_FACTOR
+    print "Alpha: ", settings.ALPHA
+    print "Beta: ", settings.BETA
+    print "Gamma: ", settings.GAMMA
+    print "-" * 100
     performance, neo, transactionComputation, trustComputation, reputationComputation = get_instance_classes()
     performance.set_start_ts()
     print "Creating transactions..."
     create_transactions(neo, transactionComputation, trustComputation, reputationComputation)
     print "Script finished."
     performance.calculate_execution_time()
-    print performance.mean_values(trustComputation.mean_trust)
-    print performance.mean_values(reputationComputation.mean_reputation)
-    # performance.statistics(transactionComputation.list_transactions)
+    performance.mean_values(trustComputation.mean_trust)
+    # print performance.mean_values(reputationComputation.mean_reputation)
+    performance.statistics(transactionComputation.list_transactions)
     # performance.print_trust(trust_repository)
     # performance.plot_values(reputationComputation.reputation_repository)
     # performance.list_network_trusts(trustComputation, reputationComputation)

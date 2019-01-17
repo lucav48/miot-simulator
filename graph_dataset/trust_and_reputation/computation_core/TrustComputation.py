@@ -36,11 +36,11 @@ class TrustComputation:
         list_transactions = self.transaction_core.list_transactions
         # if instances have never communicated before
         transactions_to_watch = list_transactions[(start_instance, final_instance)][(context, file_format)]
-        success_number = 0
+        success_number = 0.
         for t in transactions_to_watch:
             if t.success == 1:
-                success_number += 1
-        success_fraction = success_number / float(len(transactions_to_watch))
+                success_number += 1.
+        success_fraction = success_number / len(transactions_to_watch)
         if (context, file_format) not in self.transaction_core.maxNumTranSet[community]:
             transet_fraction_den = 1.
         else:
@@ -55,6 +55,8 @@ class TrustComputation:
                        settings.BETA * transet_fraction +
                        settings.GAMMA * size_fraction) / \
                       (settings.ALPHA + settings.BETA + settings.GAMMA)
+        if len(transactions_to_watch) >= 3:
+            print ""
         return trust_score
 
     def compute_trust_instance_different_network(self, shortest_path, context, file_format, size, community):
