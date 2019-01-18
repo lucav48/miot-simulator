@@ -121,4 +121,5 @@ class Performance:
                     means[index_1] = means[index_1] + element
                     occurrences += 1
             means[index_1] = means[index_1] / occurrences
+            print index_1, "\t", means[index_1]
         return means

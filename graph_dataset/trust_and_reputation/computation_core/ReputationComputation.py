@@ -62,20 +62,12 @@ class ReputationComputation:
                     new_reputation[instance] = reputation_vector[instance]
             # max di new_reputation
             max_value = max(new_reputation.values())
-            if max_value == 0:
-                max_value = 1.
             # normalize
             for instance in new_reputation:
                 new_reputation[instance] = new_reputation[instance] / max_value
-                new_reputation[instance] = settings.GAMMA + (1 - settings.GAMMA) * new_reputation[instance]
+                new_reputation[instance] = settings.DAMPING_FACTOR_REPUTATION + (1 - settings.DAMPING_FACTOR_REPUTATION) * new_reputation[instance]
             # get another max
-            max_new_reputation = 0.
-            for instance in new_reputation:
-                if new_reputation[instance] > max_new_reputation and \
-                        new_reputation[instance] != settings.INITIAL_REPUTATION_PAGERANK:
-                    max_new_reputation = new_reputation[instance]
-            if max_new_reputation == 0:
-                max_new_reputation = 1.
+            max_new_reputation = max(new_reputation.values())
             # re normalize
             max_rep_community = max(self.max_reputation_community.values())
             if max_rep_community == 0:

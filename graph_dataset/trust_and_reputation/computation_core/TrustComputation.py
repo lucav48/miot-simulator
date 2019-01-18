@@ -55,8 +55,6 @@ class TrustComputation:
                        settings.BETA * transet_fraction +
                        settings.GAMMA * size_fraction) / \
                       (settings.ALPHA + settings.BETA + settings.GAMMA)
-        if len(transactions_to_watch) >= 3:
-            print ""
         return trust_score
 
     def compute_trust_instance_different_network(self, shortest_path, context, file_format, size, community):
