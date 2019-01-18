@@ -1,4 +1,5 @@
 from graph_dataset.trust_and_reputation import settings
+from graph_dataset.trust_and_reputation.tools import Tools
 
 
 class TrustComputation:
@@ -29,6 +30,7 @@ class TrustComputation:
                     shortest_path = self.neo.get_shortest_path_instances(start_instance, final_instance)
                     trust_score = self.compute_trust_instance_different_network(shortest_path, context, file_format,
                                                                                 size, community)
+        trust_score = Tools.compute_resilience_system(self.neo.resilience_system_nodes, trust_score, start_instance)
         self.update_trust_repository(start_instance, final_instance, context, file_format, trust_score)
         return trust_score
 

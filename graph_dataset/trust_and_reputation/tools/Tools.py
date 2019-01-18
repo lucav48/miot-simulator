@@ -102,3 +102,10 @@ def get_behavioral_neighborhood_from_path(ins, pairwise_instances):
         if ins == final_instance:
             neighborhood.append(start_instance)
     return neighborhood
+
+
+def compute_resilience_system(resilience_nodes, previous_value, instance_code):
+    if settings.COMPUTE_SYSTEM_RESILIENCE and instance_code in resilience_nodes:
+        return settings.RESILIENCE_VALUE
+    else:
+        return previous_value

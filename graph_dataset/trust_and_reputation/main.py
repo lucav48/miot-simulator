@@ -18,17 +18,15 @@ def create_transactions(neo, transactionComputation, trustComputation, reputatio
         context = Tools.choose_context(list_context, transactionComputation.list_transactions, start_instance.code, final_instance.code)
         # get format and size
         file_format, size = Tools.choose_transaction_format_and_size()
-        trust_instances = \
-            round(trustComputation.compute_trust_instances(start_instance.code, final_instance.code, context,
-                                                           file_format, size, start_instance.community), 3)
-        trust_instances = compute_resilience_system(neo.resilience_system_nodes, trust_instances, start_instance.code)
+        trust_instances = round(trustComputation.compute_trust_instances(start_instance.code, final_instance.code,
+                                                                         context, file_format, size,
+                                                                         start_instance.community), 3)
         have_transaction = False
         if trust_instances < settings.LIMIT_TRUST_TO_HAVE_A_TRANSACTION:
             j += 1
             reputation = reputationComputation.compute_reputation_instance(start_instance.code,
                                                                            start_instance.community,
                                                                            context, file_format)
-            reputation = compute_resilience_system(neo.resilience_system_nodes, reputation, start_instance.code)
             if reputation > settings.LIMIT_REPUTATION_TO_HAVE_A_TRANSACTION:
                 have_transaction = True
         else:
@@ -40,13 +38,6 @@ def create_transactions(neo, transactionComputation, trustComputation, reputatio
             i += 1
     print "Reputation computed for ", j, " iterations."
     print "Transaction creation completed."
-
-
-def compute_resilience_system(resilience_nodes, previous_value, instance_code):
-    if settings.COMPUTE_SYSTEM_RESILIENCE and instance_code in resilience_nodes:
-        return settings.RESILIENCE_VALUE
-    else:
-        return previous_value
 
 
 def select_destination(start_instance):
