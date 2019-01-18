@@ -1,5 +1,7 @@
 from graph_dataset.create_dataset.neo4JHandler.Neo4JInstance import Neo4JInstance
+from graph_dataset.trust_and_reputation import settings
 import neo4JQuery
+import random
 from neo4jObject import TrustedInstance
 from neo4jObject import TrustedTransaction
 
@@ -14,6 +16,7 @@ class Neo4JManager(Neo4JInstance):
         self.number_of_communities = self.get_network_parameter(neo4JQuery.GET_NUMBER_OF_COMMUNITIES)
         self.objects_with_instances = self.read_objects_with_instances()
         self.list_instances = self.read_instances()
+        self.resilience_system_nodes = self.get_resilience_system_nodes()
 
     def generate_transaction(self, code, start_instance, end_instance, context, file_format, size, failure_rate):
         return TrustedTransaction.TrustedTransaction(code, start_instance, end_instance,
@@ -99,3 +102,15 @@ class Neo4JManager(Neo4JInstance):
 
     def get_objects_from_community(self, community):
         return self.get_network_parameter(neo4JQuery.get_objects_from_community(community))
+
+    def get_resilience_system_nodes(self):
+        resilience_nodes = []
+        if settings.COMPUTE_SYSTEM_RESILIENCE:
+            num_resilience_nodes = int(self.number_of_instances * settings.PERCENTAGE_NODE_SYSTEM_RESILIENCE)
+            i = 0
+            while i < num_resilience_nodes:
+                random_node = random.choice(self.list_instances.keys())
+                if random_node not in resilience_nodes:
+                    resilience_nodes.append(random_node)
+                    i += 1
+        return resilience_nodes

@@ -37,9 +37,9 @@ class ReputationComputation:
                     reputation_vector[instance] = self.reputation_repository[community][instance][(context,
                                                                                                    file_format)]
                 else:
-                    reputation_vector[instance] = settings.INITIAL_REPUTATION_PAGERANK
+                    reputation_vector[instance] = settings.INITIAL_REPUTATION_VALUE
             else:
-                reputation_vector[instance] = settings.INITIAL_REPUTATION_PAGERANK
+                reputation_vector[instance] = settings.INITIAL_REPUTATION_VALUE
 
         current_ts = time.time()
         while True:
@@ -137,7 +137,7 @@ class ReputationComputation:
                                     mean_values[(context, file_format)] = 0.
                                     occurrences[(context, file_format)] = 0
                                 if (context, file_format) not in actual_reputation[neighbor_object]:
-                                    actual_reputation[neighbor_object][(context, file_format)] = settings.INITIAL_REPUTATION_PAGERANK
+                                    actual_reputation[neighbor_object][(context, file_format)] = settings.INITIAL_REPUTATION_VALUE
                                 mean_values[(context, file_format)] = mean_values[(context, file_format)] + \
                                                                       self.trust_core.trust_repository[(neighbor, instance)][(context, file_format)] * \
                                                                       actual_reputation[neighbor_object][(context, file_format)]
