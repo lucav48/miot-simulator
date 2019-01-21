@@ -111,7 +111,7 @@ class Performance:
         reputationComputation.compute_reputation_iot_in_miot()
         print ""
 
-    def mean_values(self, values):
+    def mean_historical_values(self, values):
         means = {}
         for index_1 in values:
             means[index_1] = 0.
@@ -123,3 +123,14 @@ class Performance:
             means[index_1] = means[index_1] / occurrences
             print index_1, "\t", means[index_1]
         return means
+
+    def mean_values(self, values):
+        means = {}
+        for index_1 in values:
+            means[index_1] = 0.
+            occurrences = 0
+            for c_f_f in values[index_1]:
+                means[index_1] += values[index_1][c_f_f]
+                occurrences += 1
+            means[index_1] = means[index_1] / occurrences
+            print index_1, "\t", means[index_1]

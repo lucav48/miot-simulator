@@ -96,6 +96,14 @@ def is_converging(d1, d2):
     return True
 
 
+def is_converging_nested_dict(d1, d2):
+    for key in d1:
+        for other_key in d1[key]:
+            if abs(d1[key][other_key] - d2[key][other_key]) > settings.CONVERGENCE_PAGERANK:
+                return False
+    return True
+
+
 def get_behavioral_neighborhood_from_path(ins, pairwise_instances):
     neighborhood = []
     for (start_instance, final_instance) in pairwise_instances:

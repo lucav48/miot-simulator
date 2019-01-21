@@ -143,11 +143,11 @@ class ReputationComputation:
                                                                       actual_reputation[neighbor_object][(context, file_format)]
                                 occurrences[(context, file_format)] = occurrences[(context, file_format)] + 1
                 for (context, file_format) in mean_values:
-                    mean_values[(context, file_format)] = settings.DAMPING_FACTOR + \
-                                                          (1 - settings.DAMPING_FACTOR) * (mean_values[(context, file_format)] /
-                                                                                           (occurrences[(context, file_format)] * len(obj_instances)))
+                    mean_values[(context, file_format)] = settings.DAMPING_FACTOR_TRUST + \
+                                                          (1 - settings.DAMPING_FACTOR_TRUST) * (mean_values[(context, file_format)] /
+                                                                                                 (occurrences[(context, file_format)] * len(obj_instances)))
                 new_reputation[obj] = mean_values
-            if Tools.is_converging(new_reputation, actual_reputation):
+            if Tools.is_converging_nested_dict(new_reputation, actual_reputation):
                 break
             else:
                 actual_reputation = new_reputation

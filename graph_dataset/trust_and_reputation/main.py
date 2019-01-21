@@ -8,7 +8,7 @@ import settings
 import random
 
 
-def create_transactions(neo, transactionComputation, trustComputation, reputationComputation):
+def create_transactions():
     list_context = Tools.read_context_list()
     i = 0
     j = 0
@@ -36,6 +36,7 @@ def create_transactions(neo, transactionComputation, trustComputation, reputatio
             transactionComputation.add_new_transaction(i, start_instance, final_instance, context,
                                                        file_format, size)
             i += 1
+            get_snapshot(i)
     print "Reputation computed for ", j, " iterations."
     print "Transaction creation completed."
 
@@ -60,30 +61,66 @@ def get_instance_classes():
                                                                                   transaction_computation_instance,
                                                                                   trust_computation_instance)
     return performance_instance, neo_instance, transaction_computation_instance, trust_computation_instance, \
-           reputation_computation_instance
+        reputation_computation_instance
+
+
+def get_snapshot(iteration):
+    if iteration in settings.SNAPSHOT_AT:
+        print "SNAPSHOT FOR #" + str(iteration) + " TRANSACTION"
+        performance.calculate_execution_time()
+        print "TRUST INSTANCES MEAN VALUES"
+        performance.mean_historical_values(trustComputation.mean_trust)
+        print "-" * 100
+        print "REPUTATION INSTANCES MEAN VALUES"
+        performance.mean_historical_values(reputationComputation.mean_reputation)
+        print "-" * 100
+        trustComputation.compute_trust_objects()
+        reputationComputation.compute_reputation_objects_in_miot()
+        reputationComputation.compute_reputation_iot_in_miot()
+        print "TRUST OBJECTS"
+        performance.mean_values(trustComputation.trust_object)
+        print "-" * 100
+        print "REPUTATION OBJECTS"
+        performance.mean_values(reputationComputation.reputation_object)
+        print "-" * 100
+        print "REPUTATION IOT"
+        performance.mean_values(reputationComputation.reputation_iot)
+        print "-" * 100
+
+
+def print_simulation_parameters():
+    print "Parameters of simulation"
+    print "Number of transactions to create: ", settings.NUMBER_OF_TRANSACTIONS
+    print "Number of instances: ", neo.number_of_instances
+    print "Number of communities: ", neo.number_of_communities
+    print "Alpha: ", settings.ALPHA
+    print "Beta: ", settings.BETA
+    print "Gamma: ", settings.GAMMA
+    print "Damping factor trust: ", settings.DAMPING_FACTOR_TRUST
+    print "Damping factor reputation: ", settings.DAMPING_FACTOR_REPUTATION
+    print "Limit trust to have a transaction: ", settings.LIMIT_TRUST_TO_HAVE_A_TRANSACTION
+    print "Limit reputation to have a transaction: ", settings.LIMIT_REPUTATION_TO_HAVE_A_TRANSACTION
+    print "Compute resilience: ", settings.COMPUTE_SYSTEM_RESILIENCE
+    if settings.COMPUTE_SYSTEM_RESILIENCE:
+        print "Percentage resilience: ", settings.PERCENTAGE_NODE_SYSTEM_RESILIENCE
+        print "Resilience value: ", settings.RESILIENCE_VALUE
 
 
 if __name__ == "__main__":
     print "Script started."
     print "Setup environment.."
-    print "-" * 100
-    print "Parameters of simulation"
-    print "Number of transactions: ", settings.NUMBER_OF_TRANSACTIONS
-    print "Damping factor: ", settings.DAMPING_FACTOR
-    print "Alpha: ", settings.ALPHA
-    print "Beta: ", settings.BETA
-    print "Gamma: ", settings.GAMMA
-    print "Damping factor reputation: ", settings.DAMPING_FACTOR_REPUTATION
-    print "-" * 100
     performance, neo, transactionComputation, trustComputation, reputationComputation = get_instance_classes()
     performance.set_start_ts()
+    print "-" * 100
+    print_simulation_parameters()
+    print "-" * 100
     print "Creating transactions..."
-    create_transactions(neo, transactionComputation, trustComputation, reputationComputation)
+    print "-" * 100
+    create_transactions()
     print "Script finished."
-    performance.calculate_execution_time()
-    performance.mean_values(trustComputation.mean_trust)
+    # performance.calculate_execution_time()
+    # performance.mean_values(trustComputation.mean_trust)
     # performance.mean_values(reputationComputation.mean_reputation)
     performance.statistics(transactionComputation.list_transactions)
-    # performance.print_trust(trust_repository)
     # performance.plot_values(reputationComputation.reputation_repository)
     # performance.list_network_trusts(trustComputation, reputationComputation)
