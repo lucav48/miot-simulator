@@ -46,6 +46,6 @@ class TransactionsComputation:
         # update first ts
         if start_instance not in self.first_ts:
             self.first_ts[start_code] = time.time()
-        number_transactions = len(self.list_transactions[(start_instance.code, final_instance.code)][(context, file_format)])
+        number_transactions = len(self.list_transactions[(start_code, finish_code)][(context, file_format)])
         self.update_maxsize_and_maxnumtranset(start_instance.community, context, file_format, number_transactions,
                                               size, new_transaction.success)

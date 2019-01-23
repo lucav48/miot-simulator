@@ -72,19 +72,19 @@ def get_snapshot(iteration):
         performance.mean_historical_values(trustComputation.mean_trust)
         print "-" * 100
         print "REPUTATION INSTANCES MEAN VALUES"
-        performance.mean_historical_values(reputationComputation.mean_reputation)
+        # performance.mean_historical_values(reputationComputation.mean_reputation)
         print "-" * 100
         trustComputation.compute_trust_objects()
-        reputationComputation.compute_reputation_objects_in_miot()
-        reputationComputation.compute_reputation_iot_in_miot()
+        # reputationComputation.compute_reputation_objects_in_miot()
+        # reputationComputation.compute_reputation_iot_in_miot()
         print "TRUST OBJECTS"
         performance.mean_values(trustComputation.trust_object)
         print "-" * 100
-        print "REPUTATION OBJECTS"
-        performance.mean_values(reputationComputation.reputation_object)
-        print "-" * 100
-        print "REPUTATION IOT"
-        performance.mean_values(reputationComputation.reputation_iot)
+        # print "REPUTATION OBJECTS"
+        # performance.mean_values(reputationComputation.reputation_object)
+        # print "-" * 100
+        # print "REPUTATION IOT"
+        # performance.mean_values(reputationComputation.reputation_iot)
         print "-" * 100
 
 
@@ -96,7 +96,6 @@ def print_simulation_parameters():
     print "Alpha: ", settings.ALPHA
     print "Beta: ", settings.BETA
     print "Gamma: ", settings.GAMMA
-    print "Damping factor trust: ", settings.DAMPING_FACTOR_TRUST
     print "Damping factor reputation: ", settings.DAMPING_FACTOR_REPUTATION
     print "Limit trust to have a transaction: ", settings.LIMIT_TRUST_TO_HAVE_A_TRANSACTION
     print "Limit reputation to have a transaction: ", settings.LIMIT_REPUTATION_TO_HAVE_A_TRANSACTION

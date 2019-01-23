@@ -22,4 +22,4 @@ class TrustedInstance(Instance):
         elif pos == 1:
             return round(random.uniform(0.45, 0.55), 3)
         elif pos == 2:
-            return round(random.uniform(0.85, 0.95), 3)
+            return round(random.uniform(1.85, 1.95), 3)

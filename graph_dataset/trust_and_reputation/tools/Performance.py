@@ -36,7 +36,7 @@ class Performance:
                 print instance, '# of transactions ', str(transactions_per_ins[community][instance]), " ", \
                     self.neo.list_instances[instance].precision_instance
 
-    def plot_values(self, reputation_repository):
+    def plot_values_reputation(self, reputation_repository):
         # change key,value dictionary
         new_reputation = {}
         for community in reputation_repository:
