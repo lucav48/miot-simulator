@@ -111,7 +111,8 @@ class Performance:
         reputationComputation.compute_reputation_iot_in_miot()
         print ""
 
-    def mean_historical_values(self, values):
+    def mean_historical_values(self, values, file_name):
+        f = open(file_name, "w")
         means = {}
         for index_1 in values:
             means[index_1] = 0.
@@ -120,11 +121,15 @@ class Performance:
                 for element in values[index_1][c_f_f]:
                     means[index_1] = means[index_1] + element
                     occurrences += 1
-            means[index_1] = means[index_1] / occurrences
-            print index_1, "\t", means[index_1]
+            means[index_1] = round(means[index_1] / occurrences,3)
+            # print index_1, "\t", means[index_1]
+        string_to_print = str(index_1) + "\t" + str(means[index_1]) + "\n"
+        f.write(string_to_print)
+        f.close()
         return means
 
-    def mean_values(self, values):
+    def mean_values(self, values, file_name):
+        f = open(file_name, "w")
         means = {}
         for index_1 in values:
             means[index_1] = 0.
@@ -132,5 +137,8 @@ class Performance:
             for c_f_f in values[index_1]:
                 means[index_1] += values[index_1][c_f_f]
                 occurrences += 1
-            means[index_1] = means[index_1] / occurrences
-            print index_1, "\t", means[index_1]
+            if occurrences > 0:
+                means[index_1] = means[index_1] / occurrences
+                string_to_print = str(index_1) + "\t" + str(means[index_1]) + "\n"
+                f.write(string_to_print)
+        f.close()

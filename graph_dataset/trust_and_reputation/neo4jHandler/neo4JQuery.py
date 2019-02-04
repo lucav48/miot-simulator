@@ -35,6 +35,8 @@ GET_OBJECTS = "MATCH(o:Object) RETURN COLLECT(o.code) AS " + FIELD_PARAMETER
 GET_OBJECTS_WITH_INSTANCES = "MATCH(o:Object)-[:HAS_INSTANCE]-(n:Instance) RETURN o.code AS obj, " \
                              "COLLECT(n.code) AS instances"
 
+GET_NODES_FOR_COMMUNITY = "MATCH(n:Instance) RETURN DISTINCT(n.community) AS community, count(n.community) AS nodes"
+
 
 def check_behavioral_neighbors(ins1, ins2):
     return "MATCH(n1:Instance)-[:LINKED*1]-(n2:Instance) " \

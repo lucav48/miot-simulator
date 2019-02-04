@@ -14,6 +14,7 @@ class Neo4JManager(Neo4JInstance):
         self.number_of_i_arc = self.get_network_parameter(neo4JQuery.NUMBER_OF_I_ARC)
         self.number_of_c_arc = self.get_network_parameter(neo4JQuery.NUMBER_OF_C_ARC)
         self.number_of_communities = self.get_network_parameter(neo4JQuery.GET_NUMBER_OF_COMMUNITIES)
+        self.nodes_for_community = self.get_nodes_for_community()
         self.objects_with_instances = self.read_objects_with_instances()
         self.list_instances = self.read_instances()
         self.resilience_system_nodes = self.get_resilience_system_nodes()
@@ -21,6 +22,15 @@ class Neo4JManager(Neo4JInstance):
     def generate_transaction(self, code, start_instance, end_instance, context, file_format, size, failure_rate):
         return TrustedTransaction.TrustedTransaction(code, start_instance, end_instance,
                                                      context, file_format, size, failure_rate)
+
+    def get_nodes_for_community(self):
+        query_result = self.execute_query(neo4JQuery.GET_NODES_FOR_COMMUNITY)
+        community = {}
+        for x in query_result:
+            community[x["community"]] = x["nodes"]
+        return community
+
+
 
     def get_instances_linked_to(self, start_instance):
         query = neo4JQuery.GET_INSTANCES_LINKED_TO[0] + start_instance + neo4JQuery.GET_INSTANCES_LINKED_TO[1]

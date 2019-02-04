@@ -54,7 +54,7 @@ class ReputationComputation:
                         trust = self.trust_core.get_trust_instances(final_instance, instance, context, file_format)
                         rep = reputation_vector[final_instance]
                         ts_ratio = self.transaction_core.first_ts[final_instance] / current_ts
-                        ts = 1 - ts_ratio
+                        ts = 1 # - ts_ratio
                         sum_behavioral = sum_behavioral + (trust * rep * ts)
                     mean_behavioral = sum_behavioral / len(behavioral_neighborhood_input)
                     new_reputation[instance] = mean_behavioral

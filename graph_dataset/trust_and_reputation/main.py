@@ -15,7 +15,8 @@ def create_transactions():
     while i < settings.NUMBER_OF_TRANSACTIONS:
         start_instance = random.choice(neo.list_instances.values())
         final_instance = select_destination(start_instance.code)
-        context = Tools.choose_context(list_context, transactionComputation.list_transactions, start_instance.code, final_instance.code)
+        context = Tools.choose_context(list_context, transactionComputation.list_transactions, start_instance.code,
+                                       final_instance.code)
         # get format and size
         file_format, size = Tools.choose_transaction_format_and_size()
         trust_instances = round(trustComputation.compute_trust_instances(start_instance.code, final_instance.code,
@@ -24,20 +25,23 @@ def create_transactions():
         have_transaction = False
         if trust_instances < settings.LIMIT_TRUST_TO_HAVE_A_TRANSACTION:
             j += 1
-            reputation = reputationComputation.compute_reputation_instance(start_instance.code,
-                                                                           start_instance.community,
-                                                                           context, file_format)
+            if (j % 10) == 0:
+                reputation = reputationComputation.compute_reputation_instance(final_instance.code,
+                                                                               final_instance.community,
+                                                                               context, file_format)
+            else:
+                reputation = reputationComputation.reputation_repository[final_instance.community][final_instance.code][(context, file_format)]
             if reputation > settings.LIMIT_REPUTATION_TO_HAVE_A_TRANSACTION:
                 have_transaction = True
-        else:
-            have_transaction = True
+            else:
+                have_transaction = True
 
         if have_transaction:
             transactionComputation.add_new_transaction(i, start_instance, final_instance, context,
                                                        file_format, size)
             i += 1
             get_snapshot(i)
-    print "Reputation computed for ", j, " iterations."
+    print "Reputation computed for ", int(j/10), " iterations."
     print "Transaction creation completed."
 
 
@@ -68,23 +72,37 @@ def get_snapshot(iteration):
     if iteration in settings.SNAPSHOT_AT:
         print "SNAPSHOT FOR #" + str(iteration) + " TRANSACTION"
         performance.calculate_execution_time()
+        instances = "TEST_500"
+        index_list = str(settings.SNAPSHOT_AT.index(iteration))
         print "TRUST INSTANCES MEAN VALUES"
-        performance.mean_historical_values(trustComputation.mean_trust)
+        # file_path = "risultati/" + "300/" + str(int(settings.RESILIENCE_VALUE)) + "/" + str(settings.PERCENTAGE_NODE_SYSTEM_RESILIENCE) + "/"
+        file_path = "risultati/andamento_trust/"
+        # trust_file = "300_" + str(settings.PERCENTAGE_NODE_SYSTEM_RESILIENCE) + "_" + str(iteration) + "_trust.txt"
+        trust_file_instances = index_list + "_" + instances + "_" + str(iteration) + "_instances_trust.txt"
+        performance.mean_historical_values(trustComputation.mean_trust, file_path + trust_file_instances)
         print "-" * 100
         print "REPUTATION INSTANCES MEAN VALUES"
-        # performance.mean_historical_values(reputationComputation.mean_reputation)
+        file_path = "risultati/andamento_reputation/"
+        reputation_file = index_list + "_" + instances + "_" + str(iteration) + "_instances_reputation.txt"
+        # reputation_file = "300_" + str(settings.PERCENTAGE_NODE_SYSTEM_RESILIENCE) + "_" + str(iteration) + "_reputation.txt"
+        performance.mean_historical_values(reputationComputation.mean_reputation, file_path + reputation_file)
         print "-" * 100
+        file_path = "risultati/andamento_trust/"
         trustComputation.compute_trust_objects()
-        # reputationComputation.compute_reputation_objects_in_miot()
-        # reputationComputation.compute_reputation_iot_in_miot()
+        trust_file_objects = index_list + "_" + instances + "_" + str(iteration) + "_objects_trust.txt"
+        reputationComputation.compute_reputation_objects_in_miot()
+        reputationComputation.compute_reputation_iot_in_miot()
         print "TRUST OBJECTS"
-        performance.mean_values(trustComputation.trust_object)
+        performance.mean_values(trustComputation.trust_object, file_path + trust_file_objects)
         print "-" * 100
-        # print "REPUTATION OBJECTS"
-        # performance.mean_values(reputationComputation.reputation_object)
-        # print "-" * 100
-        # print "REPUTATION IOT"
-        # performance.mean_values(reputationComputation.reputation_iot)
+        print "REPUTATION OBJECTS"
+        file_path = "risultati/andamento_reputation/"
+        reputation_object_file = index_list + "_" + instances + "_" + str(iteration) + "_object_reputation.txt"
+        performance.mean_values(reputationComputation.reputation_object, file_path + reputation_object_file)
+        print "-" * 100
+        print "REPUTATION IOT"
+        reputation_iot_file = index_list + "_" + instances + "_" + str(iteration) + "_iot_reputation.txt"
+        performance.mean_values(reputationComputation.reputation_iot, file_path + reputation_iot_file)
         print "-" * 100
 
 
