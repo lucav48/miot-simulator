@@ -14,7 +14,7 @@ NUMBER_EXPERIMENT_INFORMATION_FLOW = 0
 #        "Android", "Aviation", "Economics", "Earth", "Electronics", "OpenData", "Movies", "Music"
 #        "Politics", "Space", "Security", "Earth", "Electronics", "Economics", "Chemistry", "History"
 #        "Android", "Gardening", "AI", "Earth", "DataScience", "Math", "Cooking", "Health"
-SUPERVISED_APPROACH = 1
+SUPERVISED_APPROACH = 0
 TOPIC_SUPERVISED_APPROACH = ["Engineering", "Gardening"]
 
 THRESHOLD_SUPERVISED = 0.01
