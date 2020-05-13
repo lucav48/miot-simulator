@@ -1,3 +1,3 @@
-# MIoT 2.0
+# MIoT Simulator
 
 Python 2.7
